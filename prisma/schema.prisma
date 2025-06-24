@@ -21,7 +21,7 @@ model User {
   createdAt DateTime @default(now())
   profile Profile?
   skills UserSkill[]
-  projects Project[] @relation("OwnedProject")
+  projects Project[] @relation("OwnedProjects")
   partnerships Partnership[]
   aiScore AIScore?
 }
@@ -51,9 +51,9 @@ model UserSkill{
   @@id([userId, skillId])
 }
 
-model Project{
+model Project {
   id Int @id @default(autoincrement())
-  owner User @relation("OwnedProjects", fields: [ownerId], references: [Id])
+  owner User @relation("OwnedProjects", fields: [ownerId], references: [id])
   ownerId Int
   title String
   description String?
