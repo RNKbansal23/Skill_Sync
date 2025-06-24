@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  email String @unique
+  password String
+  name String?
+  createdAt DateTime @default(now())
+  profile Profile?
+  skills UserSkill[]
+  projects Project[] @relation("OwnedProject")
+  partnerships Partnership[]
+  aiScore AIScore?
+}
+
+model Profile {
+  id Int @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [id])
+  userId Int @unique
+  bio String?
+  linkedin String?
+  leetcode String?
+  resumeUrl String?
+}
+
+model Skill{
+  id Int @id @default(autoincrement())
+  name String @unique
+  users UserSkill[]
+}
+
+model UserSkill{
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  skill Skill @relation(fields: [skillId], references: [id])
+  skillId Int
+
+  @@id([userId, skillId])
+}
+
+model Project{
+  id Int @id @default(autoincrement())
+  owner User @relation("OwnedProjects", fields: [ownerId], references: [Id])
+  ownerId Int
+  title String
+  description String?
+  createdAt DateTime @default(now())
+  partnerships Partnership[]
+}
+
+model Partnership {
+  id        Int      @id @default(autoincrement())
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  role      String?
+}
+
+model AIScore {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int      @unique
+  workEthic  Float?
+  creativity Float?
+  skills     Float?
+  updatedAt  DateTime @updatedAt
+}
