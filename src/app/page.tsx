@@ -1,12 +1,20 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import {MagnifyingGlassIcon} from "@heroicons/react/24/outline";
 
 export default function Home(){
     const [search, setSearch] = useState ('');
     const [results, setResults] = useState<any[]>([])
+
+    useEffect(() => {
+      if (search.trim()===""){
+        fetch('/api/projects/search')
+        .then(res => res.json())
+        .then(data => setResults(data));
+      }
+    }, [search])
 
     async function handleSearch(e: React.FormEvent) {
       e.preventDefault()
@@ -35,6 +43,18 @@ export default function Home(){
                 <MagnifyingGlassIcon className="w-6 h-6 text-gray-400 absolute left-4 top-1/3 transform-translate-y-1/2 pointer-events-none"/>
                 </div>
               </form>
+              <div className="mt-6">
+                {results.length > 0 && (
+                  <ul className="max-w-xl mx-auto bg-white rounded shadow p-4 text-left">
+                    {results.map(project => (
+                      <li key={project.id} className="mb-2">
+                        <span className="font-semibold text-orange-500">{project.title}</span>
+                        <p className="text-gray-600">{project.description}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
         </div>
     )
