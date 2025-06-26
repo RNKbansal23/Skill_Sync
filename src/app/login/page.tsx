@@ -46,7 +46,6 @@ export default function AuthPage() {
         alert(data.message || 'Registration failed')
       }
     } else {
-      // Login validation
       if (!form.email.trim() || !form.password.trim()) {
         alert('Please enter email and password')
         setLoading(false)
