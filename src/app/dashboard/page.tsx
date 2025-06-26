@@ -27,6 +27,15 @@ const mockUser = {
 }
 
 export default function Dashboard() {
+  const [projects, setProjects] = useState<any[]>([])
+
+  useEffect(() => {
+    fetch('../api/projects/myprojects')
+    .then(res=>res.json())
+    .then(data => setProjects(data))
+  })
+
+  console.log(projects)
   // In a real app, fetch user data from API
   const [user, setUser] = useState<any>(null)
 
