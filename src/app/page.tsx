@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
 import {MagnifyingGlassIcon} from "@heroicons/react/24/outline";
 
 export default function Home(){
@@ -27,7 +26,6 @@ export default function Home(){
 
     return (
         <div>
-            <Navbar/>
              <main className="bg-orange-500 p-10 text-center">
               <div className="flex flex-col mt-10 gap-4 font-bold text-white">
                 <p className="text-3xl">Connect with people whose skills complement your and build something amazing together</p>
