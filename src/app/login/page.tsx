@@ -45,6 +45,7 @@ export default function AuthPage() {
       setLoading(false)
       if (res.ok) {
         router.push('/dashboard')
+        window.location.replace('/dashboard')
       } else {
         setError(data.message || 'Registration failed')
       }
@@ -63,6 +64,7 @@ export default function AuthPage() {
       setLoading(false)
       if (res.ok) {
         router.push('/dashboard')
+        window.location.replace('/dashboard')
       } else {
         setError(data.message || 'Login failed')
       }

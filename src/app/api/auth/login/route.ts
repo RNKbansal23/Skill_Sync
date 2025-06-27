@@ -21,8 +21,20 @@ export async function POST(request: Request){
             process.env.JWT_SECRET!,
             { expiresIn: '1h' }
         )
+        const response = NextResponse.json({
+            message: "Login successful",
+            user: { id: user.id, email: user.email },
+        }, { status: 200 });
 
-        return NextResponse.json({message: "Login successful", user: {id: user.id, email: user.email}, token}, {status:200})
+        response.cookies.set('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60,
+        });
+
+        return response;
     } catch (error){
         return NextResponse.json({error: 'Login failed'}, {status: 500})
     }

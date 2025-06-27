@@ -1,7 +1,7 @@
-// app/components/Sidebar.tsx
 'use client'
 import Link from 'next/link'
-import { X, LayoutDashboard, Rocket, FolderKanban } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { X, LayoutDashboard, Rocket, FolderKanban, LogOut } from 'lucide-react'
 
 interface SidebarProps {
   isOpen: boolean;
@@ -9,9 +9,21 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login'); // or '/' if you want to go to the homepage
+      window.location.replace('/login')
+    } catch (err) {
+      alert('Error logging out');
+    }
+  };
+
   return (
     <>
-      {/* Full-screen overlay. It's correct for this to cover the header to disable interaction with it. */}
+      {/* Overlay */}
       <div
         className={`fixed inset-0 bg-black/60 z-40 transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -19,7 +31,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
         onClick={toggleSidebar}
       ></div>
 
-      {/* CORRECTED: Sidebar now starts below the navbar (top-16 which is 4rem) */}
+      {/* Sidebar */}
       <aside
         className={`fixed top-16 left-0 h-[calc(100%-4rem)] w-64 bg-gray-800 text-white p-6 z-50
                    transform transition-transform duration-300 ease-in-out ${
@@ -51,6 +63,15 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                 <FolderKanban size={20} />
                 <span>Available Projects</span>
               </Link>
+            </li>
+            <li>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-700 transition-colors w-full text-left"
+              >
+                <LogOut size={20} />
+                <span>Logout</span>
+              </button>
             </li>
           </ul>
         </nav>
