@@ -37,15 +37,12 @@ export default function Dashboard({ user }) {
         <ChevronRight size={28} />
       </button>
 
-      {/* 3. The Main Content Area */}
-      {/* This container will be "pushed" to the right when the sidebar is open */}
       <div
         className={`transition-transform duration-300 ease-in-out
                   ${isSidebarOpen ? 'transform translate-x-64' : 'transform translate-x-0'}`}
       >
 
         <main className="max-w-6xl mx-auto px-4 py-8">
-          {/* Welcome Header */}
           <div className="flex items-center gap-6 mb-8">
             <div className="relative">
               <img
@@ -73,9 +70,7 @@ export default function Dashboard({ user }) {
             </div>
           </div>
 
-          {/* All your dashboard cards go here... (no changes needed) */}
           <div className="grid md:grid-cols-3 gap-6">
-             {/* My Projects */}
             <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
               <h2 className="text-lg font-bold text-orange-500 mb-4">My Projects</h2>
               {user.projects.length === 0 ? (
