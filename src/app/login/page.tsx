@@ -72,138 +72,100 @@ export default function AuthPage() {
   }
 
   function switchMode() {
-    setMode(mode === 'login' ? 'register' : 'login')
+    setMode(prevMode => (prevMode === 'login' ? 'register' : 'login'))
     setForm({ name: '', email: '', password: '', confirmPassword: '' })
     setError(null)
   }
 
-  // --- Start of New Inverted Design (JSX) ---
   return (
-    <div className="relative min-h-screen w-full">
-      {/* Background Image and Overlay */}
-      <div className="absolute inset-0 z-0">
+    // Changed bg-white to bg-orange-950 for a dark orange background
+    <div className="relative min-h-screen w-full overflow-hidden bg-orange-500">
+      {/* Diagonally Clipped Background Image */}
+      <div className="absolute top-0 left-0 h-full w-full lg:w-[80%] lg:[clip-path:polygon(0_0,100%_0,85%_100%,0%_100%)]">
         <img
-          src="https://images.unsplash.com/photo-1597773150796-e5c14ebecbf5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-          alt="Abstract background"
-          className="object-cover w-full h-full"
+          src="https://img.freepik.com/free-photo/young-students-learning-together-group-study_23-2149211067.jpg"
+          alt="Students studying"
+          className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/60"></div>
+        {/* Corrected the overlay classes for a proper orange blur effect */}
+        <div className="absolute inset-0 bg-orange-800/20 backdrop-blur-sx" />
       </div>
-      
-      {/* Centered Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-        <div
-          className="w-full max-w-md p-8 space-y-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl shadow-2xl
-                     border border-white/20 backdrop-blur-md"
-        >
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-white">Synergy</h1>
-            <p className="mt-2 text-orange-100">
-              {mode === 'login' ? 'Welcome back! Please login to your account.' : 'Create an account to get started.'}
-            </p>
-          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {mode === 'register' && (
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-orange-200" />
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Full Name"
-                  value={form.name}
-                  onChange={handleChange}
-                  className="w-full text-white bg-white/20 border border-transparent rounded-lg px-3 py-3 pl-10 placeholder-orange-100 focus:outline-none focus:ring-2 focus:ring-white transition"
-                  required
-                />
+      {/* Form Container */}
+      <div className="relative z-10 flex min-h-screen items-center justify-center lg:justify-end">
+        <div className="w-full max-w-md p-6 lg:mr-[10%]">
+          
+          {/* Animated Container */}
+          <div className="relative overflow-hidden">
+            <div className={`transition-all duration-500 ease-in-out ${mode === 'register' ? 'h-[560px]' : 'h-[420px]'}`}>
+              
+              {/* Login Form */}
+              <div className={`absolute w-full p-2 transition-all duration-700 ease-in-out ${mode === 'login' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'}`}>
+                <div className="space-y-6 rounded-3xl bg-white p-8 shadow-2xl border border-white/100">
+                  <div className="text-center">
+                    <h1 className="text-4xl font-bold text-orange-500">Synergy</h1>
+                    <p className="mt-2 text-orange-500">Welcome back! Please login.</p>
+                  </div>
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-orange-200" />
+                      <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} className="w-full rounded-lg border border-orange-500 bg-white/20 py-3 pl-10 text-white placeholder-orange-200 transition focus:outline-none focus:ring-2 focus:ring-white" required />
+                    </div>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-orange-200" />
+                      <input type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} className="w-full rounded-lg border border-orange-500 bg-white/20 py-3 pl-10 text-white placeholder-orange-200 transition focus:outline-none focus:ring-2 focus:ring-white" required />
+                    </div>
+                    {error && mode === 'login' && <div className="rounded-lg bg-orange-500 p-3 text-center text-sm text-white">{error}</div>}
+                    <button type="submit" disabled={loading} className="w-full flex justify-center items-center transform rounded-lg bg-orange-500 py-3 font-bold text-white transition-all duration-300 hover:scale-105 hover:bg-orange-500 active:scale-100 disabled:cursor-not-allowed disabled:bg-orange-100/50">
+                      {loading ? <LoaderCircle className="mr-2 h-5 w-5 animate-spin" /> : 'Login'}
+                    </button>
+                  </form>
+                  <div className="text-center text-sm text-orange-500">
+                    <span>Don't have an account?{' '}
+                      <button className="font-semibold text-orange-500 hover:underline" onClick={switchMode}>Register here</button>
+                    </span>
+                  </div>
+                </div>
               </div>
-            )}
 
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-orange-200" />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={form.email}
-                onChange={handleChange}
-                className="w-full text-white bg-white/20 border border-transparent rounded-lg px-3 py-3 pl-10 placeholder-orange-100 focus:outline-none focus:ring-2 focus:ring-white transition"
-                required
-              />
+              {/* Register Form */}
+              <div className={`absolute w-full p-2 transition-all duration-700 ease-in-out ${mode === 'register' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'}`}>
+                <div className="space-y-4 rounded-3xl bg-gradient-to-br from-orange-500 to-orange-600 p-8 shadow-2xl border border-white/20">
+                  <div className="text-center">
+                    <h1 className="text-4xl font-bold text-white">Synergy</h1>
+                    <p className="mt-2 text-orange-100">Create an account to start.</p>
+                  </div>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-orange-200" />
+                      <input type="text" name="name" placeholder="Full Name" value={form.name} onChange={handleChange} className="w-full rounded-lg border border-transparent bg-white/20 py-3 pl-10 text-white placeholder-orange-100 transition focus:outline-none focus:ring-2 focus:ring-white" required />
+                    </div>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-orange-200" />
+                      <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} className="w-full rounded-lg border border-transparent bg-white/20 py-3 pl-10 text-white placeholder-orange-100 transition focus:outline-none focus:ring-2 focus:ring-white" required />
+                    </div>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-orange-200" />
+                      <input type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} className="w-full rounded-lg border border-transparent bg-white/20 py-3 pl-10 text-white placeholder-orange-100 transition focus:outline-none focus:ring-2 focus:ring-white" required />
+                    </div>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-orange-200" />
+                      <input type="password" name="confirmPassword" placeholder="Confirm Password" value={form.confirmPassword} onChange={handleChange} className="w-full rounded-lg border border-transparent bg-white/20 py-3 pl-10 text-white placeholder-orange-100 transition focus:outline-none focus:ring-2 focus:ring-white" required />
+                    </div>
+                    {error && mode === 'register' && <div className="rounded-lg bg-orange-500/50 p-3 text-center text-sm text-white">{error}</div>}
+                    <button type="submit" disabled={loading} className="w-full flex justify-center items-center transform rounded-lg bg-white py-3 font-bold text-orange-600 transition-all duration-300 hover:scale-105 hover:bg-orange-100 active:scale-100 disabled:cursor-not-allowed disabled:bg-orange-100/50">
+                      {loading ? <LoaderCircle className="mr-2 h-5 w-5 animate-spin" /> : 'Create Account'}
+                    </button>
+                  </form>
+                  <div className="text-center text-sm text-orange-100">
+                    <span>Already have an account?{' '}
+                      <button className="font-semibold text-white hover:underline" onClick={switchMode}>Login here</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
             </div>
-
-            <div className="relative">
-              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-orange-200" />
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={form.password}
-                onChange={handleChange}
-                className="w-full text-white bg-white/20 border border-transparent rounded-lg px-3 py-3 pl-10 placeholder-orange-100 focus:outline-none focus:ring-2 focus:ring-white transition"
-                required
-              />
-            </div>
-            
-            {mode === 'register' && (
-              <div className="relative">
-                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-orange-200" />
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Confirm Password"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  className="w-full text-white bg-white/20 border border-transparent rounded-lg px-3 py-3 pl-10 placeholder-orange-100 focus:outline-none focus:ring-2 focus:ring-white transition"
-                  required
-                />
-              </div>
-            )}
-            
-            {error && (
-              <div className="text-center text-sm text-white bg-red-500/50 p-3 rounded-lg">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="w-full flex justify-center items-center bg-white text-orange-600 font-bold py-3 rounded-lg transition-all duration-300 hover:bg-orange-100 disabled:bg-orange-100/50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-100"
-              disabled={loading}
-            >
-              {loading && <LoaderCircle className="animate-spin mr-2 h-5 w-5" />}
-              {loading
-                ? mode === 'login'
-                  ? 'Logging in...'
-                  : 'Registering...'
-                : mode === 'login'
-                  ? 'Login'
-                  : 'Create Account'}
-            </button>
-          </form>
-
-          <div className="text-center text-sm text-orange-100">
-            {mode === 'login' ? (
-              <span>
-                Don't have an account?{' '}
-                <button
-                  className="font-semibold text-white hover:underline"
-                  onClick={switchMode}
-                >
-                  Register here
-                </button>
-              </span>
-            ) : (
-              <span>
-                Already have an account?{' '}
-                <button
-                  className="font-semibold text-white hover:underline"
-                  onClick={switchMode}
-                >
-                  Login here
-                </button>
-              </span>
-            )}
           </div>
         </div>
       </div>
