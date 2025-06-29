@@ -5,7 +5,7 @@ import Dashboard from '@/components/Dashboard'
 
 export default async function DashboardPage() {
   // 1. Get userId from JWT
-  const token = cookies().get('token')?.value
+  const token = (await cookies()).get('token')?.value
   let userId: number | null = null
   const JWT_SECRET = process.env.JWT_SECRET
   if (token && JWT_SECRET) {
@@ -22,12 +22,12 @@ export default async function DashboardPage() {
     return <div className="flex items-center justify-center min-h-screen">Please log in.</div>
   }
 
-  // 2. Fetch user, profile, and projects
+  // 2. Fetch user, profile, and projects - FIXED
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
       profile: true,
-      projects: true, // Projects the user owns
+      ownedProjects: true, // CHANGED: projects -> ownedProjects
       partnerships: {
         include: {
           project: true, // Projects the user is a member of
@@ -35,6 +35,10 @@ export default async function DashboardPage() {
       }
     }
   })
+
+  if (!user) {
+  return <div className="flex items-center justify-center min-h-screen">User not found.</div>
+}
 
   // 3. Calculate profile completion (example logic)
   const profileFields = [
@@ -48,8 +52,8 @@ export default async function DashboardPage() {
   const filled = profileFields.filter(Boolean).length
   const profileCompletion = Math.round((filled / profileFields.length) * 100)
 
-  // 4. Gather all projects (owned + member)
-  const ownedProjects = user?.projects || []
+  // 4. Gather all projects (owned + member) - FIXED
+  const ownedProjects = user?.ownedProjects || [] // CHANGED: projects -> ownedProjects
   const memberProjects = user?.partnerships.map(p => p.project) || []
   // Remove duplicates if any
   const allProjects = [
@@ -62,7 +66,7 @@ export default async function DashboardPage() {
   // 5. Prepare user object for the dashboard
   const dashboardUser = {
     name: user?.name || '',
-    profilePic: user?.profile?.profilePic || '/default-profile.jpg', // If you add this field
+    profilePic: user?.profile?.profilePic || '/default-profile.jpg',
     profileCompletion,
     projects: allProjects,
     recommendations: [], // Fill as needed

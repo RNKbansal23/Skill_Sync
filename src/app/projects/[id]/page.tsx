@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
-async function getProject(id: string) {
+export async function getProject(id: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/projects/${id}`, {
     cache: 'no-store',
   })

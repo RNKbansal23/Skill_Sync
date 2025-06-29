@@ -1,32 +1,48 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { cookies } from 'next/headers'
-import Sidebar from '@/components/Sidebar' // Make sure this path is correct
+import Sidebar from '@/components/Sidebar'
 import { ChevronRight } from 'lucide-react'
-
+import CreateProjectPopup from '@/components/CreateProjectPopup'
 
 export default function Dashboard({ user }) {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState([])
+  const [isSidebarOpen, setSidebarOpen] = useState(false)
+  const [showPopup, setShowPopup] = useState(false)
 
   useEffect(() => {
     fetch('/api/me/projects')
       .then(res => res.json())
-      .then(data => setProjects(data.projects));
-  }, []);
-
-  const [isSidebarOpen, setSidebarOpen] = useState(false) // State for the sidebar
+      .then(data => setProjects(data.projects || []))
+      .catch(err => console.error('Failed to fetch projects:', err))
+  }, [])
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen)
+  }
+
+  const handleCreateProject = (projectData) => {
+    // Send project data to your API
+    fetch('/api/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(projectData),
+    })
+      .then(res => res.json())
+      .then(newProject => {
+        setProjects([...projects, newProject])
+        setShowPopup(false)
+      })
+      .catch(err => {
+        console.error('Failed to create project:', err)
+        alert('Failed to create project')
+      })
   }
 
   if (!user) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
 
   return (
     <div className="relative min-h-screen">
-      
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <button
         onClick={toggleSidebar}
@@ -39,9 +55,8 @@ export default function Dashboard({ user }) {
 
       <div
         className={`transition-transform duration-300 ease-in-out
-                  ${isSidebarOpen ? 'transform translate-x-64' : 'transform translate-x-0'}`}
+                  ${isSidebarOpen ? 'ml-64' : 'ml-0'}`}
       >
-
         <main className="max-w-6xl mx-auto px-4 py-8">
           <div className="flex items-center gap-6 mb-8">
             <div className="relative">
@@ -73,11 +88,11 @@ export default function Dashboard({ user }) {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
               <h2 className="text-lg font-bold text-orange-500 mb-4">My Projects</h2>
-              {user.projects.length === 0 ? (
+              {projects.length === 0 ? (
                 <p className="text-gray-500">No projects yet.</p>
               ) : (
                 <ul className="space-y-3">
-                  {user.projects.map((proj: any) => (
+                  {projects.map((proj) => (
                     <li key={proj.id} className="flex justify-between items-center">
                       <span className="font-semibold text-gray-700">{proj.title}</span>
                       <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${proj.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
@@ -87,9 +102,12 @@ export default function Dashboard({ user }) {
                   ))}
                 </ul>
               )}
-              <Link href="/projects/create" className="block mt-5 text-orange-600 font-semibold hover:underline text-sm">
+              <button
+                onClick={() => setShowPopup(true)}
+                className="block mt-5 text-orange-600 font-semibold hover:underline text-sm"
+              >
                 + Create New Project
-              </Link>
+              </button>
             </div>
 
             {/* Recommendations */}
@@ -99,7 +117,7 @@ export default function Dashboard({ user }) {
                 <p className="text-gray-500">No recommendations yet.</p>
               ) : (
                 <ul className="space-y-3">
-                  {user.recommendations.map((rec: any) => (
+                  {user.recommendations.map((rec) => (
                     <li key={rec.id} className="flex justify-between items-center">
                       <span className="text-gray-700">{rec.title}</span>
                       <button className="bg-orange-500 text-white px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-orange-600 transition-colors">
@@ -118,7 +136,7 @@ export default function Dashboard({ user }) {
                 <p className="text-gray-500">No events.</p>
               ) : (
                 <ul className="space-y-3">
-                  {user.events.map((event: any) => (
+                  {user.events.map((event) => (
                     <li key={event.id} className="flex justify-between items-center">
                       <span className="text-gray-700">{event.name}</span>
                       <span className="text-sm text-gray-500">{event.date}</span>
@@ -136,7 +154,7 @@ export default function Dashboard({ user }) {
               <p className="text-gray-500">No recent activity.</p>
             ) : (
               <ul className="space-y-2">
-                {user.activity.map((act: any) => (
+                {user.activity.map((act) => (
                   <li key={act.id} className="text-gray-700 list-disc list-inside">
                     {act.text}
                   </li>
@@ -146,6 +164,13 @@ export default function Dashboard({ user }) {
           </div>
         </main>
       </div>
+
+      {showPopup && (
+        <CreateProjectPopup
+          onClose={() => setShowPopup(false)}
+          onCreate={handleCreateProject}
+        />
+      )}
     </div>
   )
 }
