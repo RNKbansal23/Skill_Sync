@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import Sidebar from '@/components/Sidebar'
 import { ChevronRight } from 'lucide-react'
-import CreateProjectPopup from '@/components/CreateProjectPopup'
+import ProjectDetailsPopup from './ProjectDetailsPopup' // <-- Add this
 
 export default function Dashboard({ user }) {
   const [projects, setProjects] = useState([])
   const [isSidebarOpen, setSidebarOpen] = useState(false)
   const [showPopup, setShowPopup] = useState(false)
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null) // <-- Add this
 
   useEffect(() => {
     fetch('/api/me/projects')
@@ -22,7 +23,6 @@ export default function Dashboard({ user }) {
   }
 
   const handleCreateProject = (projectData) => {
-    // Send project data to your API
     fetch('/api/projects', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -93,7 +93,11 @@ export default function Dashboard({ user }) {
               ) : (
                 <ul className="space-y-3">
                   {projects.map((proj) => (
-                    <li key={proj.id} className="flex justify-between items-center">
+                    <li
+                      key={proj.id}
+                      onClick={() => setSelectedProjectId(proj.id)}
+                      className="flex justify-between items-center cursor-pointer"
+                    >
                       <span className="font-semibold text-gray-700">{proj.title}</span>
                       <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${proj.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                         {proj.status}
@@ -169,6 +173,14 @@ export default function Dashboard({ user }) {
         <CreateProjectPopup
           onClose={() => setShowPopup(false)}
           onCreate={handleCreateProject}
+        />
+      )}
+
+      {/* Add this at the bottom of your component */}
+      {selectedProjectId && (
+        <ProjectDetailsPopup
+          projectId={selectedProjectId}
+          onClose={() => setSelectedProjectId(null)}
         />
       )}
     </div>
