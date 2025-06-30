@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import Sidebar from "@/components/Sidebar";
 import { ChevronRight } from 'lucide-react'
+import ProjectDetailsPopup from "@/components/ProjectDetailsPopup";
 
 
 export default function Home() {
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -64,11 +66,13 @@ export default function Home() {
           {results.length > 0 && (
             <ul className="flex gap-7 p-4 text-left">
               {results.map((project) => (
-                <div className="bg-white w-2xl rounded-sm shadow">
-                  <li key={project.id} className="mb-2 p-3">
-                    <span className="font-semibold text-orange-500">
-                      {project.title}
-                    </span>
+                <div
+                  key={project.id}
+                  className="bg-white w-2xl rounded-sm shadow cursor-pointer"
+                  onClick={() => setSelectedProjectId(project.id)}
+                >
+                  <li className="mb-2 p-3">
+                    <span className="font-semibold text-orange-500">{project.title}</span>
                     <p className="text-gray-600">{project.description}</p>
                     <p>Owner: {project.owner.name}</p>
                   </li>
@@ -78,6 +82,12 @@ export default function Home() {
           )}
         </div>
       </div>
+      {selectedProjectId && (
+  <ProjectDetailsPopup
+    projectId={selectedProjectId}
+    onClose={() => setSelectedProjectId(null)}
+  />
+)}
     </div>
   );
 }
