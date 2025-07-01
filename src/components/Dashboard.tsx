@@ -7,7 +7,7 @@ import ProjectDetailsPopup from './ProjectDetailsPopup' // <-- Add this
 
 export default function Dashboard({ user }) {
   const [projects, setProjects] = useState([])
-  const [isSidebarOpen, setSidebarOpen] = useState(false)
+  const [isSidebarOpen, setSidebarOpen] = useState(true)
   const [showPopup, setShowPopup] = useState(false)
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null) // <-- Add this
 
