@@ -18,7 +18,7 @@ export default async function Navbar() {
   }
 
   return (
-    <nav className="flex items-center justify-between bg-white shadow">
+    <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between bg-white shadow">
       <Link href="/" className="p-4 text-2xl font-bold text-orange-500">Synergy</Link>
       
       {user?.name ? (

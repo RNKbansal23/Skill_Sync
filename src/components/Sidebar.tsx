@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { X, LayoutDashboard, Rocket, FolderKanban, LogOut } from 'lucide-react'
+import { X, LayoutDashboard, Rocket, FolderKanban, LogOut, User } from 'lucide-react'
 
 interface SidebarProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/60 z-40 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/10 z-40 transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={toggleSidebar}
@@ -52,6 +52,13 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                 <span>Dashboard</span>
               </Link>
             </li>
+            
+<li>
+              <Link href="/profile" className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-700 transition-colors">
+                <User size={20} />
+                <span>Profile</span>
+              </Link>
+            </li>
             <li>
               <Link href="/hackathons" className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-700 transition-colors">
                 <Rocket size={20} />
@@ -64,6 +71,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                 <span>Available Projects</span>
               </Link>
             </li>
+            
             <li>
               <button
                 onClick={handleLogout}
