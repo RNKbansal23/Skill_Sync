@@ -19,17 +19,21 @@ model User {
   partnerships    Partnership[]
   aiScore         AIScore?
   applications    Application[]
+  peerRatings     PeerRating[]     // Ratings given to this user by peers
+  givenPeerRatings PeerRating[]    @relation("Rater") // Ratings this user has given
 }
 
 model Profile {
-  id         Int    @id @default(autoincrement())
-  user       User   @relation(fields: [userId], references: [id])
-  userId     Int    @unique
+  id         Int     @id @default(autoincrement())
+  user       User    @relation(fields: [userId], references: [id])
+  userId     Int     @unique
   bio        String?
   linkedin   String?
   leetcode   String?
-  resumeUrl  String?
-  profilePic String?
+  resumeUrl  String?           // S3/local path for resume (future use)
+  resumeFile Bytes?            // Store resume file directly in MySQL (temporary)
+  profilePicUrl String?        // S3/local path for profile pic (future use)
+  profilePic  Bytes?           // Store profile picture directly in MySQL (temporary)
 }
 
 model Skill {
@@ -56,6 +60,7 @@ model Project {
   createdAt   DateTime              @default(now())
   partnerships Partnership[]
   requiredRoles   ProjectRequiredRole[]
+  peerRatings     PeerRating[]     // All peer ratings for this project
 }
 
 model Partnership {
@@ -71,6 +76,8 @@ model AIScore {
   id         Int      @id @default(autoincrement())
   user       User     @relation(fields: [userId], references: [id])
   userId     Int      @unique
+  resumeRating  Float?      // AI/automated rating for resume/profile
+  profileRating Float?      // AI/automated rating for profile
   workEthic  Float?
   creativity Float?
   skills     Float?
@@ -96,4 +103,19 @@ model ProjectRequiredRole {
   peopleRequired    Int                 @default(1)
   isLive            Boolean             @default(true)
   applications      Application[]
+}
+
+model PeerRating {
+  id           Int      @id @default(autoincrement())
+  ratedUser    User     @relation(fields: [ratedUserId], references: [id])
+  ratedUserId  Int
+  rater        User     @relation("Rater", fields: [raterId], references: [id])
+  raterId      Int
+  project      Project? @relation(fields: [projectId], references: [id])
+  projectId    Int?
+  rating       Float
+  comment      String?
+  createdAt    DateTime @default(now())
+
+  @@unique([ratedUserId, raterId, projectId])
 }
