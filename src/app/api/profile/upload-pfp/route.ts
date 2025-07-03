@@ -1,4 +1,3 @@
-/*
 // TODO: UNCOMMENT THIS FILE WHEN THE BACKEND IS READY
 
 import { put } from '@vercel/blob';
@@ -51,4 +50,3 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to upload image.' }, { status: 500 });
   }
 }
-*/
