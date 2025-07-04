@@ -53,11 +53,12 @@ export default function AuthPage() {
         body: JSON.stringify({ name: form.name, email: form.email, password: form.password }),
       })
       const data = await res.json()
+      console.log(data)
       setLoading(false)
       if (res.ok) {
         setShowProfileForm(true)
       } else {
-        setError(data.message || 'Registration failed')
+        setError(data.error.message || 'Registration failed')
       }
     } else {
       if (!form.email.trim() || !form.password.trim()) {

@@ -1,26 +1,35 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Profile } from '@prisma/client';
 import { LoaderCircle, Upload, Check, AlertTriangle } from 'lucide-react';
-import ResumeUploader from './ResumeUploader'; // We'll create/reuse this next
+import ResumeUploader from './ResumeUploader';
 
-// Define the prop type to include the nested profile
-type ProfileFormProps = {
-  user: User & { profile: Profile | null };
+type ProfileData = {
+  name: string;
+  bio: string;
+  linkedin: string;
+  leetcode: string;
+  profilePic?: string | null;
+  resumeUrl?: string | null;
 };
 
-export default function ProfileForm({ user }: ProfileFormProps) {
+export default function ProfileForm() {
   const router = useRouter();
   const pfpInputRef = useRef<HTMLInputElement>(null);
 
-  // State for form fields, initialized with mock data
-  const [formData, setFormData] = useState({
-    name: user.name || '',
-    bio: user.profile?.bio || '',
-    linkedin: user.profile?.linkedin || '',
-    leetcode: user.profile?.leetcode || '',
+  // State for loading and error
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // State for form fields
+  const [formData, setFormData] = useState<ProfileData>({
+    name: '',
+    bio: '',
+    linkedin: '',
+    leetcode: '',
+    profilePic: null,
+    resumeUrl: null,
   });
 
   // State for UI feedback
@@ -29,11 +38,37 @@ export default function ProfileForm({ user }: ProfileFormProps) {
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [pfpPreview, setPfpPreview] = useState<string | null>(null);
 
+  // Fetch user profile from backend
+  useEffect(() => {
+    setLoading(true);
+    fetch('/api/profile')
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          setFetchError(data.error);
+        } else {
+          setFormData({
+            name: data.name || '',
+            bio: data.profile?.bio || '',
+            linkedin: data.profile?.linkedin || '',
+            leetcode: data.profile?.leetcode || '',
+            profilePic: data.profile?.profilePic || null,
+            resumeUrl: data.profile?.resumeUrl || null,
+          });
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setFetchError('Failed to load profile');
+        setLoading(false);
+      });
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  
+
   const handlePfpChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -45,9 +80,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
   const handlePfpUpload = async (file: File) => {
     setIsPfpUploading(true);
     setStatus(null);
-    
-    // This `fetch` will fail until the backend is enabled.
-    // The `catch` block will handle the error gracefully for UI testing.
+
     try {
       const response = await fetch('/api/profile/upload-pfp', {
         method: 'POST',
@@ -56,15 +89,13 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       });
 
       if (!response.ok) throw new Error('Profile picture upload failed. (Backend is offline)');
-      
+
       setStatus({ type: 'success', message: 'Picture updated!' });
-      router.refresh(); 
+      router.refresh();
     } catch (error: any) {
       setStatus({ type: 'error', message: error.message });
     } finally {
       setIsPfpUploading(false);
-      // In a real scenario, you might not clear the preview on error
-      // setPfpPreview(null);
     }
   };
 
@@ -73,7 +104,6 @@ export default function ProfileForm({ user }: ProfileFormProps) {
     setIsSaving(true);
     setStatus(null);
 
-    // This `fetch` will also fail until the backend is enabled.
     try {
       const response = await fetch('/api/profile/update', {
         method: 'POST',
@@ -93,13 +123,16 @@ export default function ProfileForm({ user }: ProfileFormProps) {
     }
   };
 
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
+  if (fetchError) return <div className="p-8 text-center text-red-600">{fetchError}</div>;
+
   return (
     <form onSubmit={handleSubmit} className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
       <div className="p-6">
         <div className="flex flex-col sm:flex-row items-center gap-6 mb-6">
           <div className="relative">
             <img
-              src={pfpPreview || user.profile?.profilePic || '/default-profile.jpg'}
+              src={pfpPreview || formData.profilePic || '/default-profile.jpg'}
               alt="Profile"
               className="w-24 h-24 rounded-full object-cover ring-2 ring-white"
             />
@@ -138,7 +171,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
           </div>
         </div>
         
-        <ResumeUploader currentResumeUrl={user.profile?.resumeUrl} />
+        <ResumeUploader currentResumeUrl={formData.resumeUrl || undefined} />
       </div>
 
       <div className="flex items-center justify-end gap-x-6 bg-gray-50 px-4 py-4 sm:px-6 rounded-b-xl">

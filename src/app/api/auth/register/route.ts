@@ -1,4 +1,5 @@
 import {NextResponse} from 'next/server'
+import { cookies } from 'next/headers'
 import prisma from "@/lib/db"
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
@@ -26,7 +27,16 @@ export async function POST(request: Request){
             { userId: user.id, email: user.email, name: user.name },
             process.env.JWT_SECRET!,
             { expiresIn: '1h' }
-        )
+        );
+        cookies().set({
+            name: 'token',
+            value: token,
+            httpOnly: true,
+            path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60, // 1 hour
+        });
 
         return NextResponse.json({ 
         message: 'User registered', 
