@@ -37,25 +37,27 @@ export default function ProfileForm() {
   const [isPfpUploading, setIsPfpUploading] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [pfpPreview, setPfpPreview] = useState<string | null>(null);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
 
-  // Fetch user profile from backend
+
   useEffect(() => {
     setLoading(true);
-    fetch('/api/profile')
+    fetch(`${baseUrl}/api/profile/me`)
       .then(res => res.json())
       .then(data => {
         if (data.error) {
           setFetchError(data.error);
         } else {
           setFormData({
-            name: data.name || '',
-            bio: data.profile?.bio || '',
-            linkedin: data.profile?.linkedin || '',
-            leetcode: data.profile?.leetcode || '',
-            profilePic: data.profile?.profilePic || null,
-            resumeUrl: data.profile?.resumeUrl || null,
+            name: data.user?.name || '',
+            bio: data.user?.bio || '',
+            linkedin: data.user?.linkedin || '',
+            leetcode: data.user?.leetcode || '',
+            profilePic: data.user?.profilePic || null,
+            resumeUrl: data.user?.resumeUrl || null,
           });
         }
+        console.log(data)
         setLoading(false);
       })
       .catch(() => {

@@ -1,39 +1,38 @@
 import ProfileForm from '@/components/ProfileForm'
-import { User, Profile } from '@prisma/client'
 import ProfilePageLayout from '@/components/ProfilePageLayout'
-import prisma from '@/lib/db'
 import { cookies } from 'next/headers'
-import { getUserIdFromRequest } from '@/utils/auth'
 import { redirect } from 'next/navigation'
 
 export default async function ProfilePage() {
-  // 1. Get cookies and user ID
-  const cookieStore = cookies()
-  const userId = getUserIdFromRequest({ cookies: cookieStore })
+  // Get cookies for authentication
+  const cookieStore = await cookies()
+  const token = cookieStore.get('token')?.value
 
-  // 2. If not logged in, redirect to login
-  if (!userId) {
+  if (!token) {
     redirect('/login')
   }
 
-  // 3. Fetch user and profile from database
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { profile: true }
+  // Fetch profile data from API
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  const res = await fetch(`${baseUrl}/api/profile/me`, {
+    headers: { cookie: `token=${token}` },
+    cache: 'no-store',
   })
 
-  // 4. Handle user not found
-  if (!user) {
+  if (!res.ok) {
+    if (res.status === 401) redirect('/login')
     return (
       <ProfilePageLayout>
         <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">User Not Found</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Could not load profile</h1>
         </main>
       </ProfilePageLayout>
     )
   }
 
-  // 5. Render the profile page with real data
+  const data = await res.json()
+  const { user } = data
+
   return (
     <ProfilePageLayout>
       <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
