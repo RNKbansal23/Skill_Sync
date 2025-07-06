@@ -10,10 +10,8 @@ export default function ProfilePageLayout({ children }: { children: React.ReactN
   const toggleSidebar = () => setSidebarOpen((open) => !open);
   return (
     <div className="relative min-h-screen bg-gray-50 flex">
-      {/* Sidebar: overlays on mobile, sticky on desktop */}
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      {/* Orange button to open sidebar (hidden if sidebar is open or on desktop) */}
       <button
         onClick={toggleSidebar}
         className={`fixed top-8 left-0 z-30 w-12 h-12 flex items-center justify-center bg-orange-500 text-white rounded-r-lg shadow-xl hover:bg-orange-600 transition-all duration-300 transform hover:scale-110
