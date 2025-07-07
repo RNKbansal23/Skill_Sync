@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Sidebar from '@/components/Sidebar'
 import { ChevronRight } from 'lucide-react'
 import ProjectDetailsPopup from './ProjectDetailsPopup' // Assuming this exists
-// import CreateProjectPopup from './CreateProjectPopup'; // Assuming this exists
+import CreateProjectPopup from './CreateProjectPopup'; // Assuming this exists
 
 export default function Dashboard({ user }) {
   const [projects, setProjects] = useState([])
@@ -175,12 +175,12 @@ export default function Dashboard({ user }) {
           </main>
         </div>
 
-        {/* {showPopup && (
+        {showPopup && (
           <CreateProjectPopup
             onClose={() => setShowPopup(false)}
             onCreate={handleCreateProject}
           />
-        )} */}
+        )}
 
         {selectedProjectId && (
           <ProjectDetailsPopup
