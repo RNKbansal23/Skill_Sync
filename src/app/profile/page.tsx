@@ -33,9 +33,6 @@ export default async function ProfilePage({ params }) {
   const data = await res.json()
   const { user } = data
 
-  // If you support viewing other users' profiles, compare user.id and loggedInUserId
-  // For now, assume user.id is the logged-in user
-
   return (
     <ProfilePageLayout>
       <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">

@@ -17,10 +17,10 @@ model User {
   skills          UserSkill[]
   ownedProjects   Project[]        @relation("OwnedProjects")
   partnerships    Partnership[]
-  aiScore         AIScore?
   applications    Application[]
   peerRatings     PeerRating[]     // Ratings given to this user by peers
   givenPeerRatings PeerRating[]    @relation("Rater") // Ratings this user has given
+  userScore       UserScore?
 }
 
 model Profile {
@@ -72,18 +72,6 @@ model Partnership {
   role      String?
 }
 
-model AIScore {
-  id         Int      @id @default(autoincrement())
-  user       User     @relation(fields: [userId], references: [id])
-  userId     Int      @unique
-  resumeRating  Float?      // AI/automated rating for resume/profile
-  profileRating Float?      // AI/automated rating for profile
-  workEthic  Float?
-  creativity Float?
-  skills     Float?
-  updatedAt  DateTime @updatedAt
-}
-
 model Application {
   id                    Int                 @id @default(autoincrement())
   user                  User                @relation(fields: [userId], references: [id])
@@ -113,9 +101,35 @@ model PeerRating {
   raterId      Int
   project      Project? @relation(fields: [projectId], references: [id])
   projectId    Int?
-  rating       Float
-  comment      String?
-  createdAt    DateTime @default(now())
+  workEthic    Float?
+  creativity   Float?
+  skills       Float?
 
   @@unique([ratedUserId, raterId, projectId])
+}
+
+model UserScore {
+  id                Int    @id @default(autoincrement())
+  user              User   @relation(fields: [userId], references: [id])
+  userId            Int    @unique
+
+  // Automated (AI/analysis) scores
+  automatedWorkEthic     Float?
+  automatedCreativity    Float?
+  automatedSkills        Float?
+  automatedOverall       Float? // e.g., average of the above or other logic
+
+  // Bayesian peer scores
+  peerWorkEthic          Float?
+  peerCreativity         Float?
+  peerSkills             Float?
+  peerOverall            Float? // e.g., average of the above or other logic
+
+  // Final composite scores (your chosen formula)
+  finalWorkEthic         Float?
+  finalCreativity        Float?
+  finalSkills            Float?
+  finalOverall           Float?
+
+  updatedAt              DateTime @updatedAt
 }

@@ -6,17 +6,19 @@ import { Upload, FileText, LoaderCircle, CheckCircle, XCircle } from 'lucide-rea
 
 type ResumeUploaderProps = {
   currentResumeUrl: string | null | undefined;
+  disabled?: boolean;
 };
 
-export default function ResumeUploader({ currentResumeUrl }: ResumeUploaderProps) {
+export default function ResumeUploader({ currentResumeUrl, disabled = false }: ResumeUploaderProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     const file = event.target.files?.[0];
     if (file && file.type === 'application/pdf') {
       setSelectedFile(file);
@@ -28,17 +30,15 @@ export default function ResumeUploader({ currentResumeUrl }: ResumeUploaderProps
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (disabled || !selectedFile) return;
     setIsUploading(true);
     setStatus(null);
 
-    // This fetch will also fail until its backend is enabled.
     try {
       const formData = new FormData();
       formData.append('resume', selectedFile);
       const response = await fetch('/api/profile/me/upload-resume', { method: 'POST', body: formData });
       const data = await response.json();
-      console.log(data)
       if (!response.ok) throw new Error(data.error || 'Upload failed. (Backend is offline)');
       setStatus({ type: 'success', message: 'Resume uploaded successfully!' });
       setSelectedFile(null);
@@ -54,13 +54,34 @@ export default function ResumeUploader({ currentResumeUrl }: ResumeUploaderProps
     <div className="mt-6 pt-6 border-t border-gray-200">
       <h3 className="text-lg font-semibold text-gray-700 mb-3">Your Resume</h3>
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <input type="file" accept=".pdf" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+        <input
+          type="file"
+          accept=".pdf"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          disabled={disabled || isUploading}
+        />
         <div className="flex items-center gap-3 flex-shrink-0">
-          <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors">
+          <button
+            type="button"
+            onClick={() => {
+              if (!disabled && !isUploading) fileInputRef.current?.click();
+            }}
+            disabled={disabled || isUploading}
+            className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors
+              ${disabled || isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
             Choose PDF
           </button>
           {selectedFile && (
-            <button type="button" onClick={handleUpload} disabled={isUploading} className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-orange-600 border border-transparent rounded-lg hover:bg-orange-700 disabled:bg-orange-400 transition-colors">
+            <button
+              type="button"
+              onClick={handleUpload}
+              disabled={disabled || isUploading}
+              className={`flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-orange-600 border border-transparent rounded-lg hover:bg-orange-700 transition-colors
+                ${disabled || isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
               {isUploading ? <LoaderCircle className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
               {isUploading ? 'Uploading...' : 'Upload'}
             </button>

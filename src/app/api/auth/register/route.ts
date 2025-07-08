@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken'
 
 export async function POST(request: Request){
     try{
+        const cookieStore = await cookies()
         const {name, email, password} = await request.json()
         const existingUser = await prisma.user.findUnique({where: {email}})
 
@@ -28,7 +29,7 @@ export async function POST(request: Request){
             process.env.JWT_SECRET!,
             { expiresIn: '1h' }
         );
-        cookies().set({
+        cookieStore.set({
             name: 'token',
             value: token,
             httpOnly: true,

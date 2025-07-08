@@ -3,8 +3,9 @@ import { NextRequest } from 'next/server';
 import {cookies} from 'next/headers';
 
 export async function getUserIdFromRequest(req: NextRequest): number | null {
-  const token = req.cookies.get('token')?.value;
-  console.log(token)
+  const cookieStore = await cookies();
+  const token = await cookieStore.get('token')?.value;
+
   if (!token) return null;
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };

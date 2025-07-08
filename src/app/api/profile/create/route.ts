@@ -3,8 +3,9 @@ import prisma from '@/lib/db'
 import { NextResponse, NextRequest} from 'next/server';
 
 export async function POST(req: NextRequest) {
-    const body = await req.json()
-  const userId = getUserIdFromRequest(req)
+  console.log('rev')
+  const body = await req.json()
+  const userId = await getUserIdFromRequest(req)
   console.log(userId);
   if (!userId){
     return NextResponse.json({ error: 'Unauthorized' }, {status: 401})
