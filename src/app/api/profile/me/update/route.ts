@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
 import prisma from '@/lib/db';
+import { getPdfText } from "@/utils/pdf"; // Your PDF extraction util
+import { getGeminiScores } from "@/utils/gemini"; // Your Gemini API util
 import { getUserIdFromRequest } from '@/utils/auth';
 
 export async function POST(request: Request) {
@@ -28,6 +29,26 @@ export async function POST(request: Request) {
         create: { userId, bio, linkedin, leetcode },
       }),
     ]);
+
+    let aiScores = null;
+    if (resumeUrl) {
+    // 2. Download and extract PDF text
+    const pdfBuffer = await fetch(resumeUrl).then(r => r.arrayBuffer());
+    const text = await getPdfText(Buffer.from(pdfBuffer));
+
+    // 3. Call Gemini API
+    aiScores = await getGeminiScores(text); // { workEthic, creativity, skills }
+
+    // 4. Store scores in UserScore
+    await prisma.userScore.upsert({
+      where: { userId },
+      update: { automatedWorkEthic: aiScores.workEthic, automatedCreativity: aiScores.creativity, automatedSkills: aiScores.skills },
+      create: { userId, automatedWorkEthic: aiScores.workEthic, automatedCreativity: aiScores.creativity, automatedSkills: aiScores.skills },
+    });
+  }
+
+  // 5. Return scores in response
+  return NextResponse.json({ success: true, aiScores });
 
     return NextResponse.json({ message: 'Profile updated successfully' });
   } catch (error) {
