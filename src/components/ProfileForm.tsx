@@ -38,7 +38,6 @@ export default function ProfileForm({ user, isOwner, initialAiScores = null }: P
   const router = useRouter();
   const pfpInputRef = useRef<HTMLInputElement>(null);
 
-  // State for form fields
   const [formData, setFormData] = useState<ProfileData>({
     name: "",
     bio: "",
@@ -48,7 +47,6 @@ export default function ProfileForm({ user, isOwner, initialAiScores = null }: P
     resumeUrl: null,
   });
 
-  // State for UI feedback
   const [isSaving, setIsSaving] = useState(false);
   const [isPfpUploading, setIsPfpUploading] = useState(false);
   const [status, setStatus] = useState<{
