@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
+import {cookies} from 'next/headers';
 
-export function getUserIdFromRequest(req: NextRequest): number | null {
+export async function getUserIdFromRequest(req: NextRequest): number | null {
   const token = req.cookies.get('token')?.value;
   console.log(token)
   if (!token) return null;

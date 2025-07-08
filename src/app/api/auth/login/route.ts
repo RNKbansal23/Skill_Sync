@@ -8,20 +8,17 @@ export async function POST(request: Request) {
     try {
         const { email, password } = await request.json()
 
-        // Find user by email
         const user = await prisma.user.findUnique({ where: { email } })
 
         if (!user) {
             return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
         }
 
-        // Compare password
         const isPasswordValid = await bcrypt.compare(password, user.password)
         if (!isPasswordValid) {
             return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
         }
 
-        // Generate JWT token
         const token = jwt.sign(
             { userId: user.id, email: user.email, name: user.name },
             process.env.JWT_SECRET!,
@@ -29,7 +26,7 @@ export async function POST(request: Request) {
         )
 
         // Set cookie
-        cookies().set({
+        await cookies().set({
             name: 'token',
             value: token,
             httpOnly: true,

@@ -86,7 +86,7 @@ export default function AuthPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    // Send profileForm data to API
+
     const res = await fetch('/api/profile/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

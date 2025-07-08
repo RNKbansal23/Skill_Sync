@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { LoaderCircle, Upload, Check, AlertTriangle } from 'lucide-react';
+import { Eye, LoaderCircle, Upload, Check, AlertTriangle, Pencil } from 'lucide-react';
 import ResumeUploader from './ResumeUploader';
+import { useRouter } from 'next/navigation';
 
 type ProfileData = {
   name: string;
@@ -14,13 +14,14 @@ type ProfileData = {
   resumeUrl?: string | null;
 };
 
-export default function ProfileForm() {
+type ProfileFormProps = {
+  user: ProfileData;
+  isOwner: boolean;
+};
+
+export default function ProfileForm({ user, isOwner }: ProfileFormProps) {
   const router = useRouter();
   const pfpInputRef = useRef<HTMLInputElement>(null);
-
-  // State for loading and error
-  const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // State for form fields
   const [formData, setFormData] = useState<ProfileData>({
@@ -37,34 +38,24 @@ export default function ProfileForm() {
   const [isPfpUploading, setIsPfpUploading] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [pfpPreview, setPfpPreview] = useState<string | null>(null);
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  const [isEditing, setIsEditing] = useState(false);
 
-
+  // Initialize form data from props
   useEffect(() => {
-    setLoading(true);
-    fetch(`${baseUrl}/api/profile/me`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          setFetchError(data.error);
-        } else {
-          setFormData({
-            name: data.user?.name || '',
-            bio: data.user?.bio || '',
-            linkedin: data.user?.linkedin || '',
-            leetcode: data.user?.leetcode || '',
-            profilePic: data.user?.profilePic || null,
-            resumeUrl: data.user?.resumeUrl || null,
-          });
-        }
-        console.log(data)
-        setLoading(false);
-      })
-      .catch(() => {
-        setFetchError('Failed to load profile');
-        setLoading(false);
-      });
-  }, []);
+    setFormData({
+      name: user.name || '',
+      bio: user.bio || '',
+      linkedin: user.linkedin || '',
+      leetcode: user.leetcode || '',
+      profilePic: user.profilePic || null,
+      resumeUrl: user.resumeUrl || null,
+    });
+    setPfpPreview(null);
+    setIsEditing(false); // Reset editing state when user changes
+  }, [user]);
+
+  // All fields are locked unless editing
+  const isReadOnly = !isEditing || !isOwner;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -84,7 +75,7 @@ export default function ProfileForm() {
     setStatus(null);
 
     try {
-      const response = await fetch('/api/profile/upload-pfp', {
+      const response = await fetch('/api/profile/me/upload-pfp', {
         method: 'POST',
         headers: { 'content-type': file.type, 'x-vercel-filename': file.name },
         body: file,
@@ -107,7 +98,7 @@ export default function ProfileForm() {
     setStatus(null);
 
     try {
-      const response = await fetch('/api/profile/update', {
+      const response = await fetch('/api/profile/me/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -117,6 +108,7 @@ export default function ProfileForm() {
       if (!response.ok) throw new Error(data.error || 'Failed to save.');
 
       setStatus({ type: 'success', message: 'Profile saved successfully!' });
+      setIsEditing(false);
       router.refresh();
     } catch (error: any) {
       setStatus({ type: 'error', message: error.message });
@@ -124,9 +116,6 @@ export default function ProfileForm() {
       setIsSaving(false);
     }
   };
-
-  if (loading) return <div className="p-8 text-center">Loading...</div>;
-  if (fetchError) return <div className="p-8 text-center text-red-600">{fetchError}</div>;
 
   return (
     <form onSubmit={handleSubmit} className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
@@ -138,42 +127,106 @@ export default function ProfileForm() {
               alt="Profile"
               className="w-24 h-24 rounded-full object-cover ring-2 ring-white"
             />
-            <button
-              type="button"
-              onClick={() => pfpInputRef.current?.click()}
-              disabled={isPfpUploading}
-              className="absolute -bottom-2 -right-2 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-2 disabled:bg-orange-300"
-            >
-              {isPfpUploading ? <LoaderCircle className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
-            </button>
-            <input type="file" ref={pfpInputRef} onChange={handlePfpChange} accept="image/*" hidden />
+            {isOwner && isEditing && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => pfpInputRef.current?.click()}
+                  disabled={isPfpUploading}
+                  className="absolute -bottom-2 -right-2 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-2 disabled:bg-orange-300"
+                >
+                  {isPfpUploading ? <LoaderCircle className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                </button>
+                <input type="file" ref={pfpInputRef} onChange={handlePfpChange} accept="image/*" hidden />
+              </>
+            )}
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Edit Profile</h2>
-            <p className="text-sm text-gray-500">Update your photo and personal details.</p>
+            <h2 className="text-xl font-bold text-gray-900">Profile</h2>
+            <p className="text-sm text-gray-500">Personal and professional details.</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-6">
           <div className="sm:col-span-2">
             <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">Full Name</label>
-            <input type="text" name="name" id="name" value={formData.name} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm" />
+            <input
+              type="text"
+              name="name"
+              id="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+              readOnly={isReadOnly}
+            />
           </div>
           <div className="sm:col-span-2">
             <label htmlFor="bio" className="block text-sm font-medium leading-6 text-gray-900">Bio</label>
-            <textarea name="bio" id="bio" rows={4} value={formData.bio} onChange={handleInputChange} placeholder="Tell us a bit about yourself..." className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"></textarea>
+            <textarea
+              name="bio"
+              id="bio"
+              rows={4}
+              value={formData.bio}
+              onChange={handleInputChange}
+              placeholder="Tell us a bit about yourself..."
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+              readOnly={isReadOnly}
+            ></textarea>
           </div>
           <div>
             <label htmlFor="linkedin" className="block text-sm font-medium leading-6 text-gray-900">LinkedIn URL</label>
-            <input type="url" name="linkedin" id="linkedin" value={formData.linkedin} onChange={handleInputChange} placeholder="https://linkedin.com/in/..." className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm" />
+            <input
+              type="url"
+              name="linkedin"
+              id="linkedin"
+              value={formData.linkedin}
+              onChange={handleInputChange}
+              placeholder="https://linkedin.com/in/..."
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+              readOnly={isReadOnly}
+            />
           </div>
           <div>
             <label htmlFor="leetcode" className="block text-sm font-medium leading-6 text-gray-900">LeetCode URL</label>
-            <input type="url" name="leetcode" id="leetcode" value={formData.leetcode} onChange={handleInputChange} placeholder="https://leetcode.com/..." className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm" />
+            <input
+              type="url"
+              name="leetcode"
+              id="leetcode"
+              value={formData.leetcode}
+              onChange={handleInputChange}
+              placeholder="https://leetcode.com/..."
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+              readOnly={isReadOnly}
+            />
           </div>
         </div>
-        
-        <ResumeUploader currentResumeUrl={formData.resumeUrl || undefined} />
+
+        {/* Resume section with eye button (always visible if resumeUrl exists) */}
+        <div className="mt-6">
+          <label className="block text-sm font-medium leading-6 text-gray-900 mb-1">
+            Resume (PDF)
+          </label>
+          <div className="flex items-center gap-3">
+            <ResumeUploader currentResumeUrl={formData.resumeUrl || undefined} disabled={isReadOnly} />
+            {formData.resumeUrl && (
+              <a
+                href={formData.resumeUrl.startsWith('http') ? formData.resumeUrl : '/api/profile/resume'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 transition group"
+                title="View Resume"
+              >
+                <Eye className="w-5 h-5 text-gray-700 group-hover:text-orange-600" />
+                <span className="ml-2 text-xs text-gray-700 group-hover:text-orange-600">View</span>
+              </a>
+            )}
+          </div>
+          {formData.resumeUrl && (
+            <p className="text-xs text-gray-500 mt-1">
+              Resume uploaded. <span className="text-orange-600">Click the eye to view.</span>
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center justify-end gap-x-6 bg-gray-50 px-4 py-4 sm:px-6 rounded-b-xl">
@@ -183,14 +236,25 @@ export default function ProfileForm() {
             {status.message}
           </div>
         )}
-        <button
-          type="submit"
-          disabled={isSaving || isPfpUploading}
-          className="ml-auto flex items-center justify-center rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50"
-        >
-          {isSaving && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-          {isSaving ? 'Saving...' : 'Save Changes'}
-        </button>
+        {isOwner && !isEditing && (
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="flex items-center rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-600"
+          >
+            <Pencil className="w-4 h-4 mr-2" /> Edit
+          </button>
+        )}
+        {isOwner && isEditing && (
+          <button
+            type="submit"
+            disabled={isSaving || isPfpUploading}
+            className="ml-auto flex items-center justify-center rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50"
+          >
+            {isSaving && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </button>
+        )}
       </div>
     </form>
   );

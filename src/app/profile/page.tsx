@@ -3,8 +3,8 @@ import ProfilePageLayout from '@/components/ProfilePageLayout'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-export default async function ProfilePage() {
-  // Get cookies for authentication
+export default async function ProfilePage({ params }) {
+  // Getting cookies for authentication
   const cookieStore = await cookies()
   const token = cookieStore.get('token')?.value
 
@@ -12,7 +12,7 @@ export default async function ProfilePage() {
     redirect('/login')
   }
 
-  // Fetch profile data from API
+  // Fetch logged-in user info
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
   const res = await fetch(`${baseUrl}/api/profile/me`, {
     headers: { cookie: `token=${token}` },
@@ -33,6 +33,9 @@ export default async function ProfilePage() {
   const data = await res.json()
   const { user } = data
 
+  // If you support viewing other users' profiles, compare user.id and loggedInUserId
+  // For now, assume user.id is the logged-in user
+
   return (
     <ProfilePageLayout>
       <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -42,7 +45,7 @@ export default async function ProfilePage() {
             Keep your personal and professional details up-to-date.
           </p>
         </div>
-        <ProfileForm user={user} />
+        <ProfileForm user={user} isOwner={true} />
       </main>
     </ProfilePageLayout>
   )

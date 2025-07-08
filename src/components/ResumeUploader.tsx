@@ -36,7 +36,7 @@ export default function ResumeUploader({ currentResumeUrl }: ResumeUploaderProps
     try {
       const formData = new FormData();
       formData.append('resume', selectedFile);
-      const response = await fetch('/api/profile/upload-resume', { method: 'POST', body: formData });
+      const response = await fetch('/api/profile/me/upload-resume', { method: 'POST', body: formData });
       const data = await response.json();
       console.log(data)
       if (!response.ok) throw new Error(data.error || 'Upload failed. (Backend is offline)');

@@ -1,26 +1,15 @@
-
-// TODO: UNCOMMENT THIS FILE WHEN THE BACKEND IS READY
-
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import prisma from '@/lib/db';
+import { getUserIdFromRequest } from '@/utils/auth';
 
 export async function POST(request: Request) {
-  // 1. Authenticate user
-  const token = cookies().get('token')?.value;
-  const JWT_SECRET = process.env.JWT_SECRET;
+  const cookieStore = await cookies();
+  const userId = await getUserIdFromRequest({cookies: cookieStore})
 
-  if (!token || !JWT_SECRET) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
-
-  let userId: number;
-  try {
-    const payload = jwt.verify(token, JWT_SECRET) as { userId: number };
-    userId = payload.userId;
-  } catch (error) {
-    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  if (!userId) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
   // 2. Parse request body

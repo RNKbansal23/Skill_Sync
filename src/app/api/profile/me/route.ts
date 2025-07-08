@@ -6,8 +6,8 @@ import { getUserIdFromRequest } from '@/utils/auth'
 export async function GET(request: Request) {
   try {
     // Get user ID from JWT cookie
-    const cookieStore = cookies()
-    const userId = getUserIdFromRequest({ cookies: cookieStore })
+    const cookieStore = await cookies()
+    const userId = await getUserIdFromRequest({ cookies: cookieStore })
 
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
