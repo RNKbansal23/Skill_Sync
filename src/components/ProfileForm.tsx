@@ -114,7 +114,7 @@ export default function ProfileForm() {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to save. (Backend is offline)');
+      if (!response.ok) throw new Error(data.error || 'Failed to save.');
 
       setStatus({ type: 'success', message: 'Profile saved successfully!' });
       router.refresh();

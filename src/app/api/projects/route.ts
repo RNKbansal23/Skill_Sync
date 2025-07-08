@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
+import { getUserIdFromRequest } from '@/utils/auth';
 
 // GET: List all projects
 export async function GET() {
@@ -16,7 +17,14 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const ownerId = 1; // TODO: Replace with actual auth
+    const ownerId = getUserIdFromRequest(request);
+
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: 'Unauthorized: No valid user token found.' },
+        { status: 401 }
+      );
+    }
 
     // 1. Verify owner exists
     const owner = await prisma.user.findUnique({

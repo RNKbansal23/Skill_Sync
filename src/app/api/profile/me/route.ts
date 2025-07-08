@@ -13,7 +13,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    // Fetch user and profile
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { profile: true },
@@ -23,7 +22,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Prepare the response structure to match your client expectation
     const profile = user.profile || {}
 
     return NextResponse.json({

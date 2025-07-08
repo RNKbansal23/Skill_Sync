@@ -1,5 +1,3 @@
-// TODO: UNCOMMENT THIS FILE WHEN THE BACKEND IS READY
-
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';

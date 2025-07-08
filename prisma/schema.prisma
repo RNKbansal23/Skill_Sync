@@ -99,7 +99,7 @@ model ProjectRequiredRole {
   project           Project             @relation(fields: [projectId], references: [id])
   projectId         Int
   role              String
-  expertiseLevel    Float?
+  expertiseLevel    String
   peopleRequired    Int                 @default(1)
   isLive            Boolean             @default(true)
   applications      Application[]
