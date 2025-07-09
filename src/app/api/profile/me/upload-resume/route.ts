@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import { getUserIdFromRequest } from "@/utils/auth";
 
 export async function POST(request: NextRequest) {
-  console.log("received");
   const userId = await getUserIdFromRequest(request);
   if (!userId) {
     return NextResponse.json(

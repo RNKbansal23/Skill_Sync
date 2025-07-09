@@ -1,6 +1,8 @@
-import pdfParse from "pdf-parse";
+import pdfParse from 'pdf-parse';
 
 export async function getPdfText(pdfBuffer: Buffer): Promise<string> {
+  console.log('hello');
+  console.log(pdfBuffer);
   try {
     const data = await pdfParse(pdfBuffer);
     return data.text;

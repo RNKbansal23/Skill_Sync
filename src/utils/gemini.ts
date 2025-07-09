@@ -1,4 +1,5 @@
 export async function getGeminiScores(resumeText: string) {
+  console.log("GEMINI CALL")
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY
   const prompt = `
     Analyze the following resume text and rate the candidate from 1 to 5 on:

@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   Pencil,
 } from "lucide-react";
-import ResumeUploader from "./ResumeUploader";
 import AIScoreSpeedometer from "@/components/AIScoreSpeedometer";
 import { useRouter } from "next/navigation";
 
@@ -37,6 +36,7 @@ type ProfileFormProps = {
 export default function ProfileForm({ user, isOwner, initialAiScores = null }: ProfileFormProps) {
   const router = useRouter();
   const pfpInputRef = useRef<HTMLInputElement>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<ProfileData>({
     name: "",
@@ -56,8 +56,11 @@ export default function ProfileForm({ user, isOwner, initialAiScores = null }: P
   const [pfpPreview, setPfpPreview] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // State for resume blob URL and AI scores
+  // Resume state
   const [resumeBlobUrl, setResumeBlobUrl] = useState<string | null>(null);
+  const [selectedResumeFile, setSelectedResumeFile] = useState<File | null>(null);
+  const [resumeName, setResumeName] = useState<string | null>(null);
+
   const [aiScores, setAiScores] = useState<AIScores | null>(initialAiScores);
 
   // Initialize form data from props
@@ -71,6 +74,8 @@ export default function ProfileForm({ user, isOwner, initialAiScores = null }: P
       resumeUrl: user.resumeUrl || null,
     });
     setPfpPreview(null);
+    setSelectedResumeFile(null);
+    setResumeName(null);
   }, [user]);
 
   // Fetch resume from backend on mount or user change
@@ -109,7 +114,6 @@ export default function ProfileForm({ user, isOwner, initialAiScores = null }: P
   const handlePfpChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     setPfpPreview(URL.createObjectURL(file));
     handlePfpUpload(file);
   };
@@ -137,12 +141,42 @@ export default function ProfileForm({ user, isOwner, initialAiScores = null }: P
     }
   };
 
+  // New: Handle resume file selection
+  const handleResumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === "application/pdf") {
+      setSelectedResumeFile(file);
+      setResumeName(file.name);
+      setStatus(null);
+    } else {
+      setSelectedResumeFile(null);
+      setResumeName(null);
+      setStatus({ type: "error", message: "Invalid file. Please select a PDF." });
+    }
+  };
+
+  // Main save handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     setStatus(null);
 
     try {
+      // If a new resume file is selected, upload it first
+      if (selectedResumeFile) {
+        const formDataResume = new FormData();
+        formDataResume.append("resume", selectedResumeFile);
+        const res = await fetch("/api/profile/me/upload-resume", {
+          method: "POST",
+          body: formDataResume,
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Resume upload failed.");
+        }
+      }
+
+      // Now save the profile
       const response = await fetch("/api/profile/me/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -154,7 +188,9 @@ export default function ProfileForm({ user, isOwner, initialAiScores = null }: P
 
       setStatus({ type: "success", message: "Profile saved successfully!" });
       setIsEditing(false);
-      setAiScores(data.aiScores ?? null); // <-- Set AI scores from backend response
+      setAiScores(data.aiScores ?? null);
+      setSelectedResumeFile(null);
+      setResumeName(null);
       router.refresh();
     } catch (error: any) {
       setStatus({ type: "error", message: error.message });
@@ -171,128 +207,137 @@ export default function ProfileForm({ user, isOwner, initialAiScores = null }: P
         className="flex-1 bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl"
       >
         <div className="p-6">
-        <div className="flex flex-col sm:flex-row items-center gap-6 mb-6">
-          <div className="relative">
-            <img
-              src={pfpPreview || formData.profilePic || "/default-profile.jpg"}
-              alt="Profile"
-              className="w-24 h-24 rounded-full object-cover ring-2 ring-white"
-            />
-            {isOwner && isEditing && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => pfpInputRef.current?.click()}
-                  disabled={isPfpUploading}
-                  className="absolute -bottom-2 -right-2 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-2 disabled:bg-orange-300"
-                >
-                  {isPfpUploading ? (
-                    <LoaderCircle className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Upload className="w-5 h-5" />
-                  )}
-                </button>
-                <input
-                  type="file"
-                  ref={pfpInputRef}
-                  onChange={handlePfpChange}
-                  accept="image/*"
-                  hidden
-                />
-              </>
-            )}
+          {/* ...Profile picture and form fields... */}
+          <div className="flex flex-col sm:flex-row items-center gap-6 mb-6">
+            <div className="relative">
+              <img
+                src={pfpPreview || formData.profilePic || "/default-profile.jpg"}
+                alt="Profile"
+                className="w-24 h-24 rounded-full object-cover ring-2 ring-white"
+              />
+              {isOwner && isEditing && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => pfpInputRef.current?.click()}
+                    disabled={isPfpUploading}
+                    className="absolute -bottom-2 -right-2 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-2 disabled:bg-orange-300"
+                  >
+                    {isPfpUploading ? (
+                      <LoaderCircle className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Upload className="w-5 h-5" />
+                    )}
+                  </button>
+                  <input
+                    type="file"
+                    ref={pfpInputRef}
+                    onChange={handlePfpChange}
+                    accept="image/*"
+                    hidden
+                  />
+                </>
+              )}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Profile</h2>
+              <p className="text-sm text-gray-500">
+                Personal and professional details.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Profile</h2>
-            <p className="text-sm text-gray-500">
-              Personal and professional details.
-            </p>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-6">
-          <div className="sm:col-span-2">
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
-              Full Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              id="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
-              readOnly={isReadOnly}
-            />
+          {/* ...other profile fields... */}
+          <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-6">
+            {/* ...Name, Bio, LinkedIn, LeetCode... */}
+            <div className="sm:col-span-2">
+              <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">
+                Full Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                id="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+                readOnly={isReadOnly}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="bio" className="block text-sm font-medium leading-6 text-gray-900">
+                Bio
+              </label>
+              <textarea
+                name="bio"
+                id="bio"
+                rows={4}
+                value={formData.bio}
+                onChange={handleInputChange}
+                placeholder="Tell us a bit about yourself..."
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+                readOnly={isReadOnly}
+              ></textarea>
+            </div>
+            <div>
+              <label htmlFor="linkedin" className="block text-sm font-medium leading-6 text-gray-900">
+                LinkedIn URL
+              </label>
+              <input
+                type="url"
+                name="linkedin"
+                id="linkedin"
+                value={formData.linkedin}
+                onChange={handleInputChange}
+                placeholder="https://linkedin.com/in/..."
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+                readOnly={isReadOnly}
+              />
+            </div>
+            <div>
+              <label htmlFor="leetcode" className="block text-sm font-medium leading-6 text-gray-900">
+                LeetCode URL
+              </label>
+              <input
+                type="url"
+                name="leetcode"
+                id="leetcode"
+                value={formData.leetcode}
+                onChange={handleInputChange}
+                placeholder="https://leetcode.com/..."
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+                readOnly={isReadOnly}
+              />
+            </div>
           </div>
-          <div className="sm:col-span-2">
-            <label
-              htmlFor="bio"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
-              Bio
-            </label>
-            <textarea
-              name="bio"
-              id="bio"
-              rows={4}
-              value={formData.bio}
-              onChange={handleInputChange}
-              placeholder="Tell us a bit about yourself..."
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
-              readOnly={isReadOnly}
-            ></textarea>
-          </div>
-          <div>
-            <label
-              htmlFor="linkedin"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
-              LinkedIn URL
-            </label>
-            <input
-              type="url"
-              name="linkedin"
-              id="linkedin"
-              value={formData.linkedin}
-              onChange={handleInputChange}
-              placeholder="https://linkedin.com/in/..."
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
-              readOnly={isReadOnly}
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="leetcode"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
-              LeetCode URL
-            </label>
-            <input
-              type="url"
-              name="leetcode"
-              id="leetcode"
-              value={formData.leetcode}
-              onChange={handleInputChange}
-              placeholder="https://leetcode.com/..."
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
-              readOnly={isReadOnly}
-            />
-          </div>
-        </div>
-          {/* Resume section with blob viewer (always visible if resume exists) */}
+
+          {/* Resume section */}
           <div className="mt-6">
             <label className="block text-sm font-medium leading-6 text-gray-900 mb-1">
               Resume (PDF)
             </label>
-            <div className="flex items-center mb-2">
-              <ResumeUploader
-                currentResumeUrl={formData.resumeUrl || undefined}
-                disabled={!isEditing || !isOwner}
+            <div className="flex items-center mb-2 gap-3">
+              <input
+                type="file"
+                accept=".pdf"
+                ref={resumeInputRef}
+                onChange={handleResumeChange}
+                className="hidden"
+                disabled={isReadOnly}
               />
+              <button
+                type="button"
+                onClick={() => resumeInputRef.current?.click()}
+                disabled={isReadOnly}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors"
+              >
+                Choose PDF
+              </button>
+              {resumeName && (
+                <span className="text-gray-600 text-sm">
+                  Selected: <span className="font-medium">{resumeName}</span>
+                </span>
+              )}
               {resumeBlobUrl && (
                 <a
                   href={resumeBlobUrl}
