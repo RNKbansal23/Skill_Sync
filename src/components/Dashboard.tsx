@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { ChevronRight } from "lucide-react";
-import ProjectDetailsPopup from "./ProjectDetailsPopup"; // Assuming this exists
-import CreateProjectPopup from "./CreateProjectPopup"; // Assuming this exists
+import ProjectDetailsPopup from "./ProjectDetailsPopup";
+import CreateProjectPopup from "./CreateProjectPopup"; 
 
 export default function Dashboard({ user }) {
   const [projects, setProjects] = useState([]);
@@ -60,7 +60,6 @@ export default function Dashboard({ user }) {
       </div>
     );
 
-  // The component is wrapped in a single root element (React Fragment)
   return (
     <>
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -134,7 +133,7 @@ export default function Dashboard({ user }) {
                         <span className="font-semibold text-gray-700">
                           {proj.title}
                         </span>
-                        {/* You can add more fields here if needed */}
+                        {/* Can add more fields here if needed */}
                       </li>
                     ))}
                   </ul>

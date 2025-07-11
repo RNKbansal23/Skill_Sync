@@ -40,38 +40,33 @@ export async function POST(request: Request) {
     });
 
     let aiScores = null;
-    console.log(1);
     if (profile?.resumeFile && profile.resumeFile.length > 0) {
-      // Ensure we have a Buffer (Prisma may return a Uint8Array)
-      const pdfBuffer = Buffer.isBuffer(profile.resumeFile)
-        ? profile.resumeFile
-        : Buffer.from(profile.resumeFile);
-      try {
-        const text = await getPdfText(pdfBuffer);
-        // Optionally, check if text is not empty
-        if (!text || text.trim().length === 0) {
-          console.warn('Extracted PDF text is empty.');
-        }
-    //     } else {
-    //       // Call Gemini API
-    //       aiScores = await getGeminiScores(text); // { workEthic, creativity, skills }
+    const pdfBuffer = Buffer.isBuffer(profile.resumeFile)
+      ? profile.resumeFile
+      : Buffer.from(profile.resumeFile);
+    console.log(pdfBuffer || []);
 
-    //       // Store scores in UserScore
-    //       await prisma.userScore.upsert({
-    //         where: { userId },
-    //         update: {
-    //           automatedWorkEthic: aiScores.workEthic,
-    //           automatedCreativity: aiScores.creativity,
-    //           automatedSkills: aiScores.skills,
-    //         },
-    //         create: {
-    //           userId,
-    //           automatedWorkEthic: aiScores.workEthic,
-    //           automatedCreativity: aiScores.creativity,
-    //           automatedSkills: aiScores.skills,
-    //         },
-    //       });
-    //     }
+    try {
+      const text = await getPdfText(pdfBuffer);
+      if (!text || text.trim().length === 0) {
+        console.warn('Extracted PDF text is empty.');
+      } else {
+        aiScores = await getGeminiScores(text);
+          await prisma.userScore.upsert({
+            where: { userId },
+            update: {
+              automatedWorkEthic: aiScores.workEthic,
+              automatedCreativity: aiScores.creativity,
+              automatedSkills: aiScores.skills,
+            },
+            create: {
+              userId,
+              automatedWorkEthic: aiScores.workEthic,
+              automatedCreativity: aiScores.creativity,
+              automatedSkills: aiScores.skills,
+            },
+          });
+        }
       } catch (pdfError) {
         console.error('PDF parsing or Gemini scoring failed:', pdfError);
         // Optionally, return a partial success or continue

@@ -17,7 +17,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const ownerId = getUserIdFromRequest(request);
+    const ownerId = await getUserIdFromRequest(request);
+    console.log('print: ', ownerId)
 
     if (!ownerId) {
       return NextResponse.json(

@@ -4,7 +4,6 @@ import prisma from '@/lib/db'
 import Dashboard from '@/components/Dashboard'
 
 export default async function DashboardPage() {
-  // 1. Get userId from JWT
   const token = (await cookies()).get('token')?.value
   let userId: number | null = null
   const JWT_SECRET = process.env.JWT_SECRET
@@ -18,19 +17,17 @@ export default async function DashboardPage() {
   }
 
   if (!userId) {
-    // Optionally redirect to login
     return <div className="flex items-center justify-center min-h-screen">Please log in.</div>
   }
 
-  // 2. Fetch user, profile, and projects - FIXED
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
       profile: true,
-      ownedProjects: true, // CHANGED: projects -> ownedProjects
+      ownedProjects: true, 
       partnerships: {
         include: {
-          project: true, // Projects the user is a member of
+          project: true,
         }
       }
     }
@@ -38,9 +35,8 @@ export default async function DashboardPage() {
 
   if (!user) {
   return <div className="flex items-center justify-center min-h-screen">User not found.</div>
-}
+  }
 
-  // 3. Calculate profile completion (example logic)
   const profileFields = [
     user?.profile?.bio,
     user?.profile?.linkedin,
@@ -52,8 +48,7 @@ export default async function DashboardPage() {
   const filled = profileFields.filter(Boolean).length
   const profileCompletion = Math.round((filled / profileFields.length) * 100)
 
-  // 4. Gather all projects (owned + member) - FIXED
-  const ownedProjects = user?.ownedProjects || [] // CHANGED: projects -> ownedProjects
+  const ownedProjects = user?.ownedProjects || [] 
   const memberProjects = user?.partnerships.map(p => p.project) || []
   // Remove duplicates if any
   const allProjects = [
