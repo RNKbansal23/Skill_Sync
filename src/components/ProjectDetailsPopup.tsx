@@ -5,26 +5,34 @@ import { X, LoaderCircle, User, Calendar, Briefcase, Info } from 'lucide-react';
 
 type ProjectDetailsPopupProps = {
   projectId: number;
+  roleId: number;
   onClose: () => void;
+  currentUserId: number;
 };
 
-export default function ProjectDetailsPopup({ projectId, onClose }: ProjectDetailsPopupProps) {
+export default function ProjectDetailsPopup({ projectId, roleId, currentUserId, onClose }: ProjectDetailsPopupProps) {
   const [project, setProject] = useState<any>(null);
+  const [role, setRole] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // State to control the open/close animation
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // Fetch project details when the component mounts
     const fetchProjectDetails = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/projects/${projectId}`); // Assuming an API route like this exists
+        console.log('project: ', projectId)
+        const res = await fetch(`/api/projects/${projectId}`);
         if (!res.ok) throw new Error('Failed to fetch project details.');
         const data = await res.json();
         setProject(data);
+        // Find the specific role by roleId
+        const foundRole = data.requiredRoles.find((r: any) => r.id === roleId);
+        setRole(foundRole);
+        console.log(data.owner.id, currentUserId);
+
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -35,28 +43,50 @@ export default function ProjectDetailsPopup({ projectId, onClose }: ProjectDetai
     fetchProjectDetails();
 
     // Trigger the "enter" animation
-    const timer = setTimeout(() => setShow(true), 50); // A small delay allows CSS to apply initial state
+    const timer = setTimeout(() => setShow(true), 50);
 
     return () => clearTimeout(timer);
-  }, [projectId]);
+  }, [projectId, roleId]);
+
+  const handleRequestToJoin = async () => {
+    if (!role) {
+      alert('Role not found!');
+      return;
+    }
+    try {
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: project.id,
+          projectRequiredRoleId: role.id,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to apply');
+      alert('Application sent!');
+      handleClose();
+    } catch (err: any) {
+      alert('Could not apply: ' + err.message);
+    }
+  };
 
   const handleClose = () => {
-    setShow(false); // Trigger the "leave" animation
-    // Wait for the animation to finish before calling the parent's onClose
-    setTimeout(onClose, 300); // Duration should match the CSS transition duration
+    setShow(false);
+    setTimeout(onClose, 300);
   };
+
 
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ease-in-out
                   ${show ? 'opacity-100' : 'opacity-0'}`}
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }} // More controlled backdrop
-      onClick={handleClose} // Close when clicking the backdrop
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
+      onClick={handleClose}
     >
       <div
         className={`bg-white rounded-2xl shadow-2xl w-full max-w-lg transform transition-all duration-300 ease-in-out
                     ${show ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+        onClick={(e) => e.stopPropagation()}
       >
         {loading && (
           <div className="flex justify-center items-center h-64">
@@ -70,7 +100,7 @@ export default function ProjectDetailsPopup({ projectId, onClose }: ProjectDetai
           </div>
         )}
 
-        {!loading && project && (
+        {!loading && project && role && (
           <div className="p-8 relative">
             {/* Close Button */}
             <button
@@ -79,10 +109,10 @@ export default function ProjectDetailsPopup({ projectId, onClose }: ProjectDetai
             >
               <X size={24} />
             </button>
-            
+
             {/* Header */}
             <h2 className="text-3xl font-bold text-gray-800 mb-2">{project.title}</h2>
-            
+
             <div className="space-y-5 mt-6">
               {/* Description Section */}
               <div className="flex items-start gap-4">
@@ -110,23 +140,18 @@ export default function ProjectDetailsPopup({ projectId, onClose }: ProjectDetai
                   </div>
                 </div>
               </div>
-              
-              {/* Roles Section */}
+
+              {/* Single Role Section */}
               <div className="flex items-start gap-4">
                 <Briefcase className="w-6 h-6 text-orange-500 flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="font-semibold text-gray-700">Required Roles</h3>
-                  {project.requiredRoles.length > 0 ? (
-                    <ul className="list-disc list-inside text-gray-600">
-                      {project.requiredRoles.map((role: any, index: number) => (
-                        <li key={index}>
-                          {role.name}: <span className="text-sm">(Expertise: {role.expertise}, Needed: {role.count})</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500">No specific roles listed.</p>
-                  )}
+                  <h3 className="font-semibold text-gray-700">Role</h3>
+                  <div>
+                    <span className="font-semibold">{role.role}</span>
+                    <span className="ml-2 text-sm text-gray-500">
+                      (Expertise: {role.expertiseLevel}, Needed: {role.peopleRequired})
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -139,11 +164,14 @@ export default function ProjectDetailsPopup({ projectId, onClose }: ProjectDetai
               >
                 Close
               </button>
+            {project.owner.id !== currentUserId && (
               <button
                 className="px-6 py-2 rounded-lg text-white bg-orange-500 hover:bg-orange-600 transition-colors"
+                onClick={handleRequestToJoin}
               >
                 Request to Join
               </button>
+            )}
             </div>
           </div>
         )}

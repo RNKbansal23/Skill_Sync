@@ -5,22 +5,27 @@ import Sidebar from "@/components/Sidebar";
 import { ChevronRight } from "lucide-react";
 import ProjectDetailsPopup from "./ProjectDetailsPopup";
 import CreateProjectPopup from "./CreateProjectPopup"; 
+import { useRouter } from "next/navigation";
+
 
 export default function Dashboard({ user }) {
   const [projects, setProjects] = useState([]);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
-    null
-  );
+  const [selectedProject, setSelectedProject] = useState<{ projectId: number, roleId: number } | null>(null);
 
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const res = await fetch("/api/me/projects");
+        const res = await fetch("/api/projects/me");
         const data = await res.json();
-        if (res.ok) {
-          setProjects(data.projects || []);
+        console.log(data);
+        if (res.ok && data.projects) {
+          const projectRolePairs = data.projects.flatMap((project) => 
+          project.requiredRoles.map((role) => ({
+            project, role,
+          })));
+          setProjects(projectRolePairs);
         } else {
           setProjects([]);
         }
@@ -29,7 +34,7 @@ export default function Dashboard({ user }) {
       }
     }
     fetchProjects();
-    console.log(setProjects);
+    console.log(user);
   }, []);
 
   const toggleSidebar = () => {
@@ -117,34 +122,40 @@ export default function Dashboard({ user }) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* My Projects Card */}
               <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
-                <h2 className="text-lg font-bold text-orange-500 mb-4">
-                  My Projects
-                </h2>
-                {projects.length === 0 ? (
-                  <p className="text-gray-500">No projects yet.</p>
-                ) : (
-                  <ul className="space-y-3">
-                    {projects.map((proj, idx) => (
-                      <li
-                        key={proj.id ?? `project-${idx}`}
-                        onClick={() => setSelectedProjectId(proj.id)}
-                        className="flex justify-between items-center p-2 rounded-md hover:bg-gray-100 cursor-pointer transition-colors"
-                      >
-                        <span className="font-semibold text-gray-700">
-                          {proj.title}
-                        </span>
-                        {/* Can add more fields here if needed */}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <button
-                  onClick={() => setShowPopup(true)}
-                  className="block mt-5 text-orange-600 font-semibold hover:underline text-sm"
-                >
-                  + Create New Project
-                </button>
-              </div>
+  <h2 className="text-lg font-bold text-orange-500 mb-4">
+    My Project Roles
+  </h2>
+  {projects.length === 0 ? (
+    <p className="text-gray-500">No roles yet.</p>
+  ) : (
+    <ul className="space-y-3">
+      {projects.map(({ project, role }, idx) => (
+        <li
+          key={role.id ?? `projectrole-${idx}`}
+          onClick={() => setSelectedProject({ projectId: project.id, roleId: role.id })}
+          className="flex flex-col md:flex-row justify-between items-start md:items-center p-2 rounded-md hover:bg-gray-100 cursor-pointer transition-colors"
+        >
+          <div>
+            <span className="font-semibold text-gray-700">
+              {project.title}
+            </span>
+            <span className="ml-2 text-sm text-gray-500">
+              (Role: {role.role}, Expertise: {role.expertiseLevel}, Needed: {role.peopleRequired})
+            </span>
+          </div>
+          {/* Add more fields or actions as needed */}
+        </li>
+      ))}
+    </ul>
+  )}
+  <button
+    onClick={() => setShowPopup(true)}
+    className="block mt-5 text-orange-600 font-semibold hover:underline text-sm"
+  >
+    + Create New Project
+  </button>
+</div>
+
 
               {/* Recommendations Card */}
               <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
@@ -195,27 +206,39 @@ export default function Dashboard({ user }) {
               </div>
             </div>
 
-            {/* Recent Activity Card */}
-            <div className="bg-white rounded-xl shadow-md p-6 mt-8 hover:shadow-lg transition-shadow">
-              <h2 className="text-lg font-bold text-orange-500 mb-4">
-                Recent Activity
-              </h2>
-              {/* THIS LINE IS NOW FIXED */}
-              {user.activity.length === 0 ? (
-                <p className="text-gray-500">No recent activity.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {user.activity.map((act) => (
-                    <li
-                      key={act.id}
-                      className="text-gray-700 list-disc list-inside"
-                    >
-                      {act.text}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+           <div className="bg-white rounded-xl shadow-md p-6 mt-8 hover:shadow-lg transition-shadow">
+  {/* <h2 className="text-lg font-bold text-orange-500 mb-4">
+    Review Applications
+  </h2>
+  {user.ownedProjects && user.ownedProjects.length === 0 ? (
+    <p className="text-gray-500">You have not created any projects yet.</p>
+  ) : (
+    <div className="space-y-6">
+      {user.ownedProjects.map((project) => (
+        <div key={project.id}>
+          <h3 className="font-semibold text-gray-800 mb-2">{project.title}</h3>
+          {project.requiredRoles && project.requiredRoles.length > 0 ? (
+            <ul className="space-y-2">
+              {project.requiredRoles.map((role) => (
+                <li
+                  key={role.id}
+                  className="cursor-pointer text-gray-700 font-medium border rounded p-3 hover:bg-orange-50 hover:text-orange-600 transition"
+                  onClick={() =>
+                    router.push(`/dashboard/projects/${project.id}/roles/${role.id}`)
+                  }
+                >
+                  {role.role} ({role.expertiseLevel}) — {role.peopleRequired} needed
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-400 text-sm">No roles defined for this project.</p>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+</div> */}
           </main>
         </div>
 
@@ -226,10 +249,12 @@ export default function Dashboard({ user }) {
           />
         )}
 
-        {selectedProjectId && (
+        {selectedProject && (
           <ProjectDetailsPopup
-            projectId={selectedProjectId}
-            onClose={() => setSelectedProjectId(null)}
+            projectId={selectedProject.projectId}
+            roleId = {selectedProject.roleId}
+            onClose={() => setSelectedProject(null)}
+            currentUserId={user.id}
           />
         )}
       </div>

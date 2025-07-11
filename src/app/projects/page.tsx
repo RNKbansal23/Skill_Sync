@@ -5,24 +5,34 @@ import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import Sidebar from "@/components/Sidebar";
 import { ChevronRight } from 'lucide-react'
 import ProjectDetailsPopup from "@/components/ProjectDetailsPopup";
-
+import { useUser } from '@/components/UserContextProvider';
 
 export default function Home() {
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [selectedProject, setSelectedProject] = useState<{ projectId: number, roleId: number } | null>(null);
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
+  const { user } = useUser();
 
+  const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
+
+  // Fetch all projects for the user on mount (if you want this)
   useEffect(() => {
     if (search.trim() === "") {
       fetch("/api/projects/search")
         .then((res) => res.json())
-        .then((data) => setResults(data));
+        .then((data) => {
+          console.log(data)
+          // If your API returns { projects: [...] }
+          const projectRolePairs = data.projects.flatMap((project) =>
+            project.requiredRoles.map((role) => ({
+              project,
+              role,
+            }))
+          );
+          setProjects(projectRolePairs);
+        });
     }
   }, [search]);
 
@@ -34,13 +44,20 @@ export default function Home() {
       `/api/projects/search?q=${encodeURIComponent(search)}`
     );
     const data = await res.json();
-    setResults(data);
+
+    const projectRolePairs = data.projects.flatMap((project) =>
+      project.requiredRoles.map((role) => ({
+        project,
+        role,
+      }))
+    );
+    setProjects(projectRolePairs);
   }
 
   return (
     <div>
-        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-        <button
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <button
         onClick={toggleSidebar}
         className={`fixed top-20 left-4 z-30 w-12 h-12 flex items-center justify-center bg-orange-500 text-white rounded-lg shadow-xl hover:bg-orange-600 transition-all duration-300 transform hover:scale-110
                   ${isSidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
@@ -63,18 +80,19 @@ export default function Home() {
           </div>
         </form>
         <div className="mt-6">
-          {results.length > 0 && (
+          {projects.length > 0 && (
             <ul className="flex gap-7 p-4 text-left">
-              {results.map((project) => (
+              {projects.map(({ project, role }) => (
                 <div
-                  key={project.id}
+                  key={`${project.id}-${role.id}`}
                   className="bg-white w-2xl rounded-sm shadow cursor-pointer"
-                  onClick={() => setSelectedProjectId(project.id)}
+                  onClick={() => setSelectedProject({ projectId: project.id, roleId: role.id })}
                 >
                   <li className="mb-2 p-3">
                     <span className="font-semibold text-orange-500">{project.title}</span>
                     <p className="text-gray-600">{project.description}</p>
                     <p>Owner: {project.owner.name}</p>
+                    <p>Role: {role.title}</p>
                   </li>
                 </div>
               ))}
@@ -82,12 +100,14 @@ export default function Home() {
           )}
         </div>
       </div>
-      {selectedProjectId && (
-  <ProjectDetailsPopup
-    projectId={selectedProjectId}
-    onClose={() => setSelectedProjectId(null)}
-  />
-)}
+      {selectedProject && (
+        <ProjectDetailsPopup
+          projectId={selectedProject.projectId}
+          roleId={selectedProject.roleId}
+          onClose={() => setSelectedProject(null)}
+          currentUserId={user?.id}
+        />
+      )}
     </div>
   );
 }

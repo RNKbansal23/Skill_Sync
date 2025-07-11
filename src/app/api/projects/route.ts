@@ -7,10 +7,10 @@ export async function GET() {
   const projects = await prisma.project.findMany({
     include: { 
       owner: true,
-      partnerships: true,
+      requiredRoles: true,
     }
   })
-  return NextResponse.json({ message: projects })
+return NextResponse.json({ projects })
 }
 
 // POST: Create a new project with required roles
