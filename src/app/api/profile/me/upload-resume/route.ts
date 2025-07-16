@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import jwt from "jsonwebtoken";
-import { getUserIdFromRequest } from "@/utils/auth";
+import { getUserFromSession } from "@/utils/auth";
 
 export async function POST(request: NextRequest) {
-  const userId = await getUserIdFromRequest(request);
+  const userId = await getUserFromSession(request);
   if (!userId) {
     return NextResponse.json(
       { error: "Unauthorized: No valid token" },

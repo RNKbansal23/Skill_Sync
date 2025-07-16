@@ -11,13 +11,12 @@ export default function Home() {
   const [selectedProject, setSelectedProject] = useState<{ projectId: number, roleId: number } | null>(null);
   const [search, setSearch] = useState("");
   const [projects, setProjects] = useState<any[]>([]);
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   const { user } = useUser();
 
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
-  // Fetch all projects for the user on mount (if you want this)
   useEffect(() => {
     if (search.trim() === "") {
       fetch("/api/projects/search")
@@ -55,18 +54,24 @@ export default function Home() {
   }
 
   return (
-    <div>
-      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+  <>
+    <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+
+    <div className="relative min-h-screen bg-gray-50">
+      {/* Sidebar toggle button */}
       <button
         onClick={toggleSidebar}
-        className={`fixed top-20 left-4 z-30 w-12 h-12 flex items-center justify-center bg-orange-500 text-white rounded-lg shadow-xl hover:bg-orange-600 transition-all duration-300 transform hover:scale-110
-                  ${isSidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`fixed top-1/2 -translate-y-1/2 left-4 z-30 w-10 h-10 flex items-center justify-center bg-orange-500 text-white rounded-full shadow-lg hover:bg-orange-600 transition-all duration-300 transform hover:scale-110 ${
+          isSidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
         aria-label="Toggle navigation"
       >
-        <ChevronRight size={28} />
+        <ChevronRight size={24} />
       </button>
-      <div className="text-center mt-10">
-        <h1 className="text-2xl font-bold text-orange-500">Browse Projects</h1>
+
+      <div className={`transition-all duration-300 ease-in-out ${isSidebarOpen ? 'ml-64' : 'ml-0'} pt-24 px-4`}>
+        <h1 className="text-2xl font-bold text-orange-500 text-center">Browse Projects</h1>
+        
         <form className="mt-5 flex justify-center" onSubmit={handleSearch}>
           <div className="relative w-full max-w-xl">
             <input
@@ -76,30 +81,31 @@ export default function Home() {
               onChange={(e) => setSearch(e.target.value)}
               className="p-2 border rounded-full w-full pl-12 py-3 text-xl"
             />
-            <MagnifyingGlassIcon className="w-6 h-6 text-gray-400 absolute left-4 top-1/3 transform-translate-y-1/2 pointer-events-none" />
+            <MagnifyingGlassIcon className="w-6 h-6 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </form>
-        <div className="mt-6">
+
+        <div className="mt-8">
           {projects.length > 0 && (
-            <ul className="flex gap-7 p-4 text-left">
+            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {projects.map(({ project, role }) => (
-                <div
+                <li
                   key={`${project.id}-${role.id}`}
-                  className="bg-white w-2xl rounded-sm shadow cursor-pointer"
+                  className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition"
                   onClick={() => setSelectedProject({ projectId: project.id, roleId: role.id })}
                 >
-                  <li className="mb-2 p-3">
-                    <span className="font-semibold text-orange-500">{project.title}</span>
-                    <p className="text-gray-600">{project.description}</p>
-                    <p>Owner: {project.owner.name}</p>
-                    <p>Role: {role.title}</p>
-                  </li>
-                </div>
+                  <h3 className="font-semibold text-orange-500 text-lg">{project.title}</h3>
+                  <p className="text-sm text-gray-600 mb-1">{project.description}</p>
+                  <p className="text-sm text-gray-700">Owner: {project.owner.name}</p>
+                  <p className="text-sm text-gray-700">Role: {role.title}</p>
+                </li>
               ))}
             </ul>
           )}
         </div>
       </div>
+
+      {/* Project Details Modal */}
       {selectedProject && (
         <ProjectDetailsPopup
           projectId={selectedProject.projectId}
@@ -109,5 +115,6 @@ export default function Home() {
         />
       )}
     </div>
-  );
+  </>
+);
 }

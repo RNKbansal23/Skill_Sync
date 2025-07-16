@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
-import { getUserIdFromRequest } from '@/utils/auth';
+import { getUserFromSession } from '@/utils/auth';
 
 // GET: List all projects
 export async function GET() {
@@ -17,7 +17,7 @@ return NextResponse.json({ projects })
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const ownerId = await getUserIdFromRequest(request);
+    const ownerId = await getUserFromSession(request);
     console.log('print: ', ownerId)
 
     if (!ownerId) {

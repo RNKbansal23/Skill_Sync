@@ -54,11 +54,10 @@ export default function ProjectDetailsPopup({ projectId, roleId, currentUserId, 
       return;
     }
     try {
-      const res = await fetch('/api/applications', {
+      const res = await fetch(`/api/applications/${projectId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          projectId: project.id,
           projectRequiredRoleId: role.id,
         }),
       });

@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import AIScoreSpeedometer from "@/components/AIScoreSpeedometer";
 import { useRouter } from "next/navigation";
+import Sidebar from '@/components/Sidebar';
+import { ChevronRight } from 'lucide-react';
+
 
 type ProfileData = {
   name: string;
@@ -37,6 +40,9 @@ export default function ProfileForm({ user, isOwner, initialAiScores = null }: P
   const router = useRouter();
   const pfpInputRef = useRef<HTMLInputElement>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
   const [formData, setFormData] = useState<ProfileData>({
     name: "",
@@ -200,6 +206,23 @@ export default function ProfileForm({ user, isOwner, initialAiScores = null }: P
   };
 
   return (
+    <>
+    <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+    
+    <div className="relative min-h-screen bg-gray-50">
+      {/* Sidebar toggle button */}
+      <button
+        onClick={toggleSidebar}
+        className={`fixed top-1/2 -translate-y-1/2 left-4 z-30 w-10 h-10 flex items-center justify-center bg-orange-500 text-white rounded-full shadow-lg hover:bg-orange-600 transition-all duration-300 transform hover:scale-110 ${
+          isSidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+        aria-label="Toggle navigation"
+      >
+        <ChevronRight size={24} />
+      </button>
+
+      <div className={`transition-all duration-300 ease-in-out ${isSidebarOpen ? 'ml-64' : 'ml-0'} pt-24 px-6 pb-12`}>
+
     <div className="flex flex-col lg:flex-row gap-8">
       {/* Main Profile Form */}
       <form
@@ -426,5 +449,9 @@ export default function ProfileForm({ user, isOwner, initialAiScores = null }: P
         )}
       </aside>
     </div>
+  </div>
+  </div>
+  </>
+
   );
 }
