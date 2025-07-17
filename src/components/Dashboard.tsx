@@ -45,8 +45,9 @@ export default function Dashboard({ user }) {
     })
       .then((res) => res.json())
       .then((newProject) => {
-        const newPairs = newProject.requiredRoles.map((role) => ({
-          project: newProject,
+        const roles = Array.isArray(newProject.requiredRoles)? newProject.requiredRoles: [];
+        const newPairs = roles.map((role) => ({
+          project: newProject,  
           role,
         }))
         setProjects([...projects, ...newPairs])
@@ -231,7 +232,7 @@ export default function Dashboard({ user }) {
                                 className="cursor-pointer text-gray-700 font-medium border rounded p-3 hover:bg-orange-50 hover:text-orange-600 transition"
                                 onClick={() =>
                                   router.push(
-                                    `http://localhost:3000  /dashboard/projects/${project.id}/roles/${role.id}`
+                                    `http://localhost:3000/dashboard/projects/${project.id}/roles/${role.id}`
                                   )
                                 }
                               >
