@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import ProfileShell from '@/components/ProfileShell'; // new component
 
 export default async function ProfilePage({params}) {
-  const user = await getUserFromSession();
+    const user = await getUserFromSession();
     const profileId = parseInt(params.profileId, 10);
   
     if (!user) redirect('/login');
@@ -12,6 +12,7 @@ export default async function ProfilePage({params}) {
   const profile = await prisma.profile.findUnique({
     where: { userId: profileId },
     select: {
+      name: true,
       bio: true,
       linkedin: true,
       leetcode: true,
@@ -20,14 +21,15 @@ export default async function ProfilePage({params}) {
     },
   });
 
+  console.log(profile)
+
   if (!profile) {
     return <div className="p-8 text-center text-gray-500">Profile not found</div>;
   }
 
   const userProfile = {
     id: profileId,
-    name:profileId.name,
-    email: profile.email,
+    name: profile.name,
     ...profile,
   };
 

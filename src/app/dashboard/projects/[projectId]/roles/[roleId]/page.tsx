@@ -25,6 +25,7 @@ export default function RoleApplicationsPage() {
         if (!res.ok) {
           throw new Error(data.error || 'Failed to fetch applications');
         }
+        console.log(data.applications);
         setApplications(data.applications);
       } catch (err: any) {
         setError(err.message);
@@ -123,20 +124,32 @@ export default function RoleApplicationsPage() {
                           View LinkedIn
                         </a>
                       </div>
-                      <div className="flex gap-2 mt-2">
-                        <button
-                            className="px-4 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
-                            onClick={() => handleDecision(app.id, 'accept')}
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        className="px-4 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                        onClick={() => handleDecision(app.id, 'accept')}
+                      >
+                        Accept
+                      </button>
+                      <button
+                        className="px-4 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                        onClick={() => handleDecision(app.id, 'reject')}
+                      >
+                        Reject
+                      </button>
+                      {app.user?.id && (
+                        <a
+                          href={`/profile/${app.user.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center"
+                          style={{ textDecoration: 'none' }}
                         >
-                            Accept
-                        </button>
-                        <button
-                            className="px-4 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-                            onClick={() => handleDecision(app.id, 'reject')}
-                        >
-                            Reject
-                        </button>
-                        </div>
+                          View Profile
+                        </a>
+                      )}
+                    </div>
+
 
                     </div>
                   </li>

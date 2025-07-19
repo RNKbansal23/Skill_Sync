@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const userId = await getUserIdFromRequest(request);
+  const userId = await getUserFromSession(request);
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 401 });
   }

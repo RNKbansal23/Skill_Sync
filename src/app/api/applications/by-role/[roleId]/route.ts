@@ -2,17 +2,27 @@ import { getUserFromSession } from '@/utils/auth';
 import prisma from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
+type Context = {
+  params: { roleId?: string }
+};
+
 export async function GET(
   req: NextRequest,
-  { params }: { params: { roleId: string } }
+  context: Promise<Context>
 ) {
+  const { params } = await context;
+  const roleId = parseInt(params?.roleId ?? '', 10);
+  console.log('Parsed roleId:', roleId);
+
+  if (!roleId) {
+    return NextResponse.json({ error: 'Invalid roleId' }, { status: 400 });
+  }
+
   try {
     const user = await getUserFromSession(req);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const roleId = parseInt(params.roleId);
 
     const role = await prisma.projectRequiredRole.findUnique({
       where: { id: roleId },

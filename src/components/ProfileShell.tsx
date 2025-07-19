@@ -1,4 +1,3 @@
-// components/ProfileShell.tsx
 'use client';
 
 import { useState } from 'react';
@@ -8,6 +7,7 @@ import ProfilePageLayout from './ProfilePageLayout';
 import ProfileForm from './ProfileForm'; // already built
 
 export default function ProfileShell({ user, isOwner }) {
+  console.log(isOwner)
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
@@ -30,16 +30,23 @@ export default function ProfileShell({ user, isOwner }) {
       </button>
 
       {/* Content that shifts right with Sidebar */}
-      <div className={`transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-0'} pt-12`}>
+      <div className={`transition-all duration-300 ${isSidebarOpen ? 'ml-34' : 'ml-0'} pt-12`}>
         <ProfilePageLayout>
           <main className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
             {/* ✅ This heading now shifts with the sidebar */}
             <h1 className="text-3xl font-bold text-gray-800 pt-6">
-              Your Profile
+              {isOwner ? (
+                <>
+                <div>Your Profile</div>
+                <p className="mt-1 text-sm text-gray-500">
+                Keep your personal and professional details up-to-date.
+                </p>
+                </>
+              ): (
+                <div>{user.name}'s profile</div>
+              )}
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Keep your personal and professional details up-to-date.
-            </p>
+
 
             <ProfileForm user={user} isOwner={isOwner} />
           </main>
