@@ -1,11 +1,11 @@
-import { getUserIdFromRequest } from '@/utils/auth' // implement this for your auth system
+import { getUserFromSession } from '@/utils/auth' // implement this for your auth system
 import prisma from '@/lib/db'
 import { NextResponse, NextRequest} from 'next/server';
 
 export async function POST(req: NextRequest) {
   console.log('rev')
   const body = await req.json()
-  const userId = await getUserIdFromRequest(req)
+  const userId = await getUserFromSession(req)
   console.log(userId);
   if (!userId){
     return NextResponse.json({ error: 'Unauthorized' }, {status: 401})
@@ -13,9 +13,9 @@ export async function POST(req: NextRequest) {
   const { bio, linkedin, leetcode } = body
   try {
     const profile = await prisma.profile.upsert({
-      where: { userId },
+      where: { userId: userId.id },
       update: { bio, linkedin, leetcode },
-      create: { userId, bio, linkedin, leetcode },
+      create: { userId: userId.id, bio, linkedin, leetcode },
     })
 
     return NextResponse.json({

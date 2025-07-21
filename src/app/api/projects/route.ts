@@ -1,25 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
-import { getUserIdFromRequest } from '@/utils/auth';
+import { getUserFromSession } from '@/utils/auth';
 
 // GET: List all projects
 export async function GET() {
   const projects = await prisma.project.findMany({
     include: { 
       owner: true,
-      partnerships: true,
+      requiredRoles: true,
     }
   })
-  return NextResponse.json({ message: projects })
+return NextResponse.json({ projects })
 }
 
 // POST: Create a new project with required roles
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const ownerId = getUserIdFromRequest(request);
+    const session = await getUserFromSession(request);
+    console.log('print: ', session);
 
-    if (!ownerId) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized: No valid user token found.' },
         { status: 401 }
@@ -28,11 +29,11 @@ export async function POST(request: NextRequest) {
 
     // 1. Verify owner exists
     const owner = await prisma.user.findUnique({
-      where: { id: ownerId }
+      where: { id: session.id }
     });
     if (!owner) {
       return NextResponse.json(
-        { error: `User with ID ${ownerId} not found` },
+        { error: `User with ID ${session.id} not found` },
         { status: 404 }
       );
     }
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       data: {
         title: data.title,
         description: data.description,
-        ownerId: ownerId,
+        ownerId: session.id,
         requiredRoles: {
           create: data.requiredRoles.map((role: any) => ({
             role: role.role,

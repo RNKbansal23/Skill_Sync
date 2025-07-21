@@ -23,6 +23,7 @@ export default async function Navbar() {
       
       {user?.name ? (
         <div className="flex items-center gap-4 pr-4">
+          <Link href="/dashboard" className="text-gray-700 hover:text-orange-500">Dashboard</Link>
           <Link href="/projects" className="text-gray-700 hover:text-orange-500">Projects</Link>
           <Link href="/hackathons" className="text-gray-700 hover:text-orange-500">Hackathons</Link>
           <span className="text-orange-500 font-semibold">Hi, {user.name}</span>

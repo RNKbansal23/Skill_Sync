@@ -31,6 +31,7 @@ model Profile {
   id         Int     @id @default(autoincrement())
   user       User    @relation(fields: [userId], references: [id])
   userId     Int     @unique
+  name       String?
   bio        String?
   linkedin   String?
   leetcode   String?

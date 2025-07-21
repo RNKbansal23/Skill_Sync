@@ -1,16 +1,18 @@
-import pdfParse from "pdf-parse";
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js';
+import 'pdfjs-dist/legacy/build/pdf.worker.js'; // <-- Ensures worker code is present
 
-/**
- * Extracts text from a PDF buffer.
- * @param pdfBuffer Buffer of the PDF file.
- * @returns The extracted text as a string.
- */
+// Disable worker (force main-thread parsing)
+pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+
 export async function getPdfText(pdfBuffer: Buffer): Promise<string> {
-  try {
-    const data = await pdfParse(pdfBuffer);
-    return data.text;
-  } catch (error) {
-    console.error("Failed to extract PDF text:", error);
-    throw new Error("Failed to extract PDF text");
+  const uint8Array = new Uint8Array(pdfBuffer.buffer, pdfBuffer.byteOffset, pdfBuffer.byteLength);
+  const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
+  const pdf = await loadingTask.promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map((item: any) => item.str).join(' ') + '\n';
   }
+  return text;
 }

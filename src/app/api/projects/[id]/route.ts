@@ -3,18 +3,22 @@ import prisma from "@/lib/db";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  {params} : { params: Promise<{ id: string }>}
 ) {
+  const {id} = await params
+  const projectId = Number(id);
+  if (isNaN(projectId)) {
+    return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+  }
+
   try {
     const project = await prisma.project.findUnique({
-      where: { id: Number(params.id) },
+      where: { id: projectId },
       include: {
         owner: true,
         requiredRoles: true,
         partnerships: {
-          include: {
-            user: true,
-          },
+          include: { user: true },
         },
       },
     });

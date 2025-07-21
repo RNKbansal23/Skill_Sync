@@ -9,12 +9,9 @@ export async function GET(request: Request) {
 
     if (!query.trim()) {
         projects = await prisma.project.findMany({
-            orderBy: { createdAt: 'desc' },
-            take: 10,
             include: {
-                owner: {
-                    select: { name: true } // Only fetch the owner's name
-                }
+                owner: true,
+                requiredRoles: true,
             }
         })
     } else {
@@ -25,14 +22,12 @@ export async function GET(request: Request) {
                     { description: { contains: query } }
                 ]
             },
-            orderBy: { createdAt: 'desc' },
-            take: 10,
             include: {
-                owner: {
-                    select: { name: true }
-                }
+                owner: true,
+                requiredRoles: true,
             }
         })
     }
-    return NextResponse.json(projects)
+    console.log(projects)
+    return NextResponse.json({projects: projects})
 }
