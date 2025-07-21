@@ -21,6 +21,10 @@ model User {
   peerRatings     PeerRating[]     // Ratings given to this user by peers
   givenPeerRatings PeerRating[]    @relation("Rater") // Ratings this user has given
   userScore       UserScore?
+
+  // --- Hackathon relations ---
+  hackathonTeams     HackathonTeam[] @relation("HackathonTeamMembers")
+  seekingHackathons  Hackathon[]     @relation("UsersSeekingTeam")
 }
 
 model Profile {
@@ -132,4 +136,39 @@ model UserScore {
   finalOverall           Float?
 
   updatedAt              DateTime @updatedAt
+}
+
+// --- Hackathon models ---
+
+model Hackathon {
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String   @db.Text
+  startDate    DateTime
+  endDate      DateTime
+  website      String?
+  imageUrl     String? // For a banner image
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // A hackathon can have many teams
+  teams        HackathonTeam[]
+
+  // A list of users looking for a team in this specific hackathon
+  // This creates a many-to-many relation between User and Hackathon
+  seekingUsers User[] @relation("UsersSeekingTeam")
+}
+
+model HackathonTeam {
+  id          Int       @id @default(autoincrement())
+  name        String
+  createdAt   DateTime  @default(now())
+
+  // Relation to the hackathon it belongs to
+  hackathon   Hackathon @relation(fields: [hackathonId], references: [id])
+  hackathonId Int
+
+  // A team is composed of many users (members)
+  // This creates a many-to-many relation between User and HackathonTeam
+  members     User[]   @relation("HackathonTeamMembers")
 }
